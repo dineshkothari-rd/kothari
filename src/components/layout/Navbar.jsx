@@ -4,7 +4,6 @@ import { useTheme } from "../../hooks/useTheme";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase/firebase";
 import { useAuth } from "../../hooks/useAuth";
-const ADMIN_EMAIL = "dineshkothari2021@gmail.com";
 
 function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
@@ -52,17 +51,14 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin, adminName } = useAuth();
 
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Rooms", path: "/rooms" },
     { name: "Gallery", path: "/gallery" },
     { name: "Contact", path: "/contact" },
-    ...(currentUser ? [{ name: "My Dashboard", path: "/tenant" }] : []),
-    ...(currentUser?.email === ADMIN_EMAIL
-      ? [{ name: "Admin", path: "/admin" }]
-      : []),
+    ...(isAdmin ? [{ name: "Dashboard", path: "/admin" }] : []),
   ];
 
   async function handleLogout() {
@@ -97,7 +93,7 @@ export default function Navbar() {
           {currentUser ? (
             <div className="flex items-center gap-3">
               <span className="text-sm text-blue-100 dark:text-gray-300">
-                👋 {currentUser.displayName || currentUser.email}
+                👋 {adminName}
               </span>
               <button
                 onClick={handleLogout}

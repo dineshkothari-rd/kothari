@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase/firebase";
 import { useNavigate, Link } from "react-router-dom";
 import Button from "../common/Button";
 
@@ -40,8 +41,23 @@ export default function LoginForm() {
     }
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, form.email, form.password);
-      navigate("/tenant");
+      const result = await signInWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password,
+      );
+
+      // Login ke turant baad Firestore check karo
+      const adminRef = doc(db, "admins", result.user.email);
+      const adminSnap = await getDoc(adminRef);
+
+      if (adminSnap.exists()) {
+        navigate("/admin");
+      } else {
+        // Admin nahi hai — logout karo aur error dikhao
+        await auth.signOut();
+        setError("Access denied. You are not an admin.");
+      }
     } catch (err) {
       console.error(err);
       setError("Invalid email or password. Please try again.");
@@ -57,7 +73,7 @@ export default function LoginForm() {
           Welcome Back 👋
         </h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-          Login to your tenant account
+          Admin login only
         </p>
       </div>
 
@@ -73,7 +89,7 @@ export default function LoginForm() {
         name="email"
         value={form.email}
         onChange={handleChange}
-        placeholder="rahul@gmail.com"
+        placeholder="admin@gmail.com"
       />
       <InputField
         label="Password"
@@ -87,16 +103,6 @@ export default function LoginForm() {
       <Button variant="primary" onClick={handleLogin} className="w-full">
         {loading ? "Logging in..." : "Login"}
       </Button>
-
-      <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-        Don't have an account?{" "}
-        <Link
-          to="/signup"
-          className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
-        >
-          Sign up
-        </Link>
-      </p>
     </div>
   );
 }
