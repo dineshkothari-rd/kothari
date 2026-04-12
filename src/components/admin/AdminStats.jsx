@@ -4,7 +4,7 @@ export default function AdminStats({ tenants }) {
 
   const stats = [
     { icon: "👥", label: "Total Tenants", value: totalTenants },
-    { icon: "🛏️", label: "Rooms Occupied", value: `${totalTenants}/12` },
+    { icon: "🛏️", label: "Rooms Occupied", value: `${totalTenants}/15` },
     {
       icon: "💰",
       label: "Monthly Revenue",

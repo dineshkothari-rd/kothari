@@ -4,11 +4,15 @@ import { db } from "../firebase/firebase";
 import AdminStats from "../components/admin/AdminStats";
 import AddTenantForm from "../components/admin/AddTenantForm";
 import TenantList from "../components/admin/TenantList";
+import AddPaymentForm from "../components/admin/AddPaymentForm";
+import PaymentList from "../components/admin/PaymentList";
+import NoticeBoard from "../components/admin/NoticeBoard";
 import Button from "../components/common/Button";
 
 export default function AdminDashboard() {
   const [tenants, setTenants] = useState([]);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddTenant, setShowAddTenant] = useState(false);
+  const [showAddPayment, setShowAddPayment] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
@@ -19,17 +23,25 @@ export default function AdminDashboard() {
     return unsubscribe;
   }, []);
 
-  function handleSuccess() {
-    setSuccessMsg("✅ Tenant added successfully!");
+  function showSuccess(msg) {
+    setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(""), 3000);
   }
 
   return (
     <div className="bg-gray-50 dark:bg-gray-950 min-h-screen transition-colors duration-300">
-      {showAddForm && (
+      {showAddTenant && (
         <AddTenantForm
-          onClose={() => setShowAddForm(false)}
-          onSuccess={handleSuccess}
+          onClose={() => setShowAddTenant(false)}
+          onSuccess={() => showSuccess("✅ Tenant added successfully!")}
+        />
+      )}
+
+      {showAddPayment && (
+        <AddPaymentForm
+          tenants={tenants}
+          onClose={() => setShowAddPayment(false)}
+          onSuccess={() => showSuccess("✅ Payment record added!")}
         />
       )}
 
@@ -42,14 +54,24 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <div className="flex justify-between items-center">
-          <div />
-          <Button variant="primary" onClick={() => setShowAddForm(true)}>
+        {/* Tenant Section */}
+        <div className="flex justify-end">
+          <Button variant="primary" onClick={() => setShowAddTenant(true)}>
             + Add Tenant
           </Button>
         </div>
-
         <TenantList />
+
+        {/* Payment Section */}
+        <div className="flex justify-end">
+          <Button variant="primary" onClick={() => setShowAddPayment(true)}>
+            + Add Payment
+          </Button>
+        </div>
+        <PaymentList tenants={tenants} />
+
+        {/* Notice Board */}
+        <NoticeBoard />
       </div>
     </div>
   );
