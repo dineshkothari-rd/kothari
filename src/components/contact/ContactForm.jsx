@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Button from "../common/Button";
 
 const initialState = {
   name: "",
@@ -18,8 +17,8 @@ function InputField({
   placeholder,
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
         {label}
       </label>
       <input
@@ -28,7 +27,7 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+        className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
       />
     </div>
   );
@@ -36,20 +35,20 @@ function InputField({
 
 function SelectField({ label, name, value, onChange }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
         {label}
       </label>
       <select
         name={name}
         value={value}
         onChange={onChange}
-        className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+        className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
       >
         <option value="">Select room type</option>
-        <option value="Single">Single Occupancy</option>
-        <option value="Double">Double Sharing</option>
-        <option value="Triple">Triple Sharing</option>
+        <option value="Single">Single Occupancy — ₹8,000/mo</option>
+        <option value="Double">Double Sharing — ₹5,500/mo</option>
+        <option value="Triple">Triple Sharing — ₹4,000/mo</option>
       </select>
     </div>
   );
@@ -57,8 +56,8 @@ function SelectField({ label, name, value, onChange }) {
 
 function TextAreaField({ label, name, value, onChange, placeholder }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
         {label}
       </label>
       <textarea
@@ -67,7 +66,7 @@ function TextAreaField({ label, name, value, onChange, placeholder }) {
         onChange={onChange}
         placeholder={placeholder}
         rows={4}
-        className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm resize-none"
+        className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm resize-none"
       />
     </div>
   );
@@ -93,26 +92,31 @@ export default function ContactForm() {
 
   if (submitted) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm text-center flex flex-col items-center gap-4">
-        <span className="text-6xl">🎉</span>
-        <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 shadow-sm border border-gray-100 dark:border-gray-700 text-center flex flex-col items-center gap-4">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-4xl shadow-lg">
+          🎉
+        </div>
+        <h3 className="text-2xl font-extrabold text-gray-800 dark:text-white">
           Enquiry Sent!
         </h3>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-gray-500 dark:text-gray-400 max-w-xs">
           We'll contact you within 24 hours to schedule your visit.
         </p>
-        <Button variant="primary" onClick={() => setSubmitted(false)}>
+        <button
+          onClick={() => setSubmitted(false)}
+          className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-8 py-3 rounded-full font-bold hover:opacity-90 transition shadow-md mt-2"
+        >
           Send Another
-        </Button>
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm flex flex-col gap-5">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-5">
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
-          Book a Free Visit
+        <h2 className="text-2xl font-extrabold text-gray-800 dark:text-white mb-1">
+          Book a Free Visit 🏠
         </h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm">
           Fill in your details and we'll get back to you shortly.
@@ -156,9 +160,12 @@ export default function ContactForm() {
         placeholder="Any specific requirements or questions..."
       />
 
-      <Button variant="primary" onClick={handleSubmit} className="w-full">
+      <button
+        onClick={handleSubmit}
+        className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 rounded-full font-bold hover:opacity-90 transition shadow-md"
+      >
         Send Enquiry
-      </Button>
+      </button>
     </div>
   );
 }

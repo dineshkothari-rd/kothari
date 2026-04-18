@@ -2,13 +2,12 @@ import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebase";
-import { useNavigate, Link } from "react-router-dom";
-import Button from "../common/Button";
+import { useNavigate } from "react-router-dom";
 
 function InputField({ label, type, name, value, onChange, placeholder }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
         {label}
       </label>
       <input
@@ -17,7 +16,7 @@ function InputField({ label, type, name, value, onChange, placeholder }) {
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+        className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
       />
     </div>
   );
@@ -46,15 +45,11 @@ export default function LoginForm() {
         form.email,
         form.password,
       );
-
-      // Login ke turant baad Firestore check karo
       const adminRef = doc(db, "admins", result.user.email);
       const adminSnap = await getDoc(adminRef);
-
       if (adminSnap.exists()) {
         navigate("/admin");
       } else {
-        // Admin nahi hai — logout karo aur error dikhao
         await auth.signOut();
         setError("Access denied. You are not an admin.");
       }
@@ -67,18 +62,18 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-8 w-full max-w-md mx-auto flex flex-col gap-5">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-          Welcome Back 👋
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 flex flex-col gap-6">
+      <div>
+        <h2 className="text-2xl font-extrabold text-gray-800 dark:text-white mb-1">
+          Welcome back 👋
         </h2>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-          Admin login only
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
+          Sign in to your admin account
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl">
           {error}
         </div>
       )}
@@ -100,9 +95,13 @@ export default function LoginForm() {
         placeholder="••••••••"
       />
 
-      <Button variant="primary" onClick={handleLogin} className="w-full">
-        {loading ? "Logging in..." : "Login"}
-      </Button>
+      <button
+        onClick={handleLogin}
+        disabled={loading}
+        className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 rounded-full font-bold hover:opacity-90 transition shadow-md disabled:opacity-60"
+      >
+        {loading ? "Signing in..." : "Sign In"}
+      </button>
     </div>
   );
 }

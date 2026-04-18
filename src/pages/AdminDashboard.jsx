@@ -1,19 +1,63 @@
 import { useState, useEffect } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebase";
-import AdminStats from "../components/admin/AdminStats";
-import AddTenantForm from "../components/admin/AddTenantForm";
+import AdminTabs from "../components/admin/AdminTabs";
+import OverviewTab from "../components/admin/OverviewTab";
 import TenantList from "../components/admin/TenantList";
-import AddPaymentForm from "../components/admin/AddPaymentForm";
+import AddTenantForm from "../components/admin/AddTenantForm";
 import PaymentList from "../components/admin/PaymentList";
+import AddPaymentForm from "../components/admin/AddPaymentForm";
 import NoticeBoard from "../components/admin/NoticeBoard";
 import Button from "../components/common/Button";
+import { useAuth } from "../hooks/useAuth";
+
+function AdminHeader({ adminName, tenants }) {
+  const totalRevenue = tenants.reduce((sum, t) => sum + (t.rent || 0), 0);
+
+  return (
+    <div className="relative bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-white py-8 px-4 overflow-hidden transition-colors duration-300">
+      <div className="absolute top-[-40px] right-[-40px] w-48 h-48 bg-white/5 rounded-full" />
+      <div className="absolute bottom-[-30px] left-[-20px] w-40 h-40 bg-white/5 rounded-full" />
+      <div className="relative max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl">
+            👨‍💼
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight">
+              Admin Dashboard
+            </h1>
+            <p className="text-white/70 text-sm mt-0.5">
+              👋 Welcome back, {adminName}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="bg-white/10 rounded-xl px-4 py-2 text-center">
+            <p className="text-white/60 text-xs">Monthly Revenue</p>
+            <p className="text-white font-extrabold text-lg">
+              ₹{totalRevenue.toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-white/10 rounded-xl px-4 py-2 text-center">
+            <p className="text-white/60 text-xs">Total Tenants</p>
+            <p className="text-white font-extrabold text-lg">
+              {tenants.length}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState("overview");
   const [tenants, setTenants] = useState([]);
   const [showAddTenant, setShowAddTenant] = useState(false);
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const { adminName } = useAuth();
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "tenants"), (snap) => {
@@ -30,48 +74,68 @@ export default function AdminDashboard() {
 
   return (
     <div className="bg-gray-50 dark:bg-gray-950 min-h-screen transition-colors duration-300">
+      {/* Modals */}
       {showAddTenant && (
         <AddTenantForm
           onClose={() => setShowAddTenant(false)}
-          onSuccess={() => showSuccess("✅ Tenant added successfully!")}
+          onSuccess={() => {
+            showSuccess("✅ Tenant added successfully!");
+            setActiveTab("tenants");
+          }}
         />
       )}
-
       {showAddPayment && (
         <AddPaymentForm
           tenants={tenants}
           onClose={() => setShowAddPayment(false)}
-          onSuccess={() => showSuccess("✅ Payment record added!")}
+          onSuccess={() => {
+            showSuccess("✅ Payment record added!");
+            setActiveTab("payments");
+          }}
         />
       )}
 
-      <div className="max-w-6xl mx-auto px-4 py-10 flex flex-col gap-10">
-        <AdminStats tenants={tenants} />
+      {/* Header */}
+      <AdminHeader adminName={adminName} tenants={tenants} />
 
+      {/* Content */}
+      <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col gap-6">
+        {/* Success message */}
         {successMsg && (
-          <div className="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 px-4 py-3 rounded-xl text-sm">
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-xl text-sm font-medium">
             {successMsg}
           </div>
         )}
 
-        {/* Tenant Section */}
-        <div className="flex justify-end">
-          <Button variant="primary" onClick={() => setShowAddTenant(true)}>
-            + Add Tenant
-          </Button>
-        </div>
-        <TenantList />
+        {/* Tabs */}
+        <AdminTabs active={activeTab} onChange={setActiveTab} />
 
-        {/* Payment Section */}
-        <div className="flex justify-end">
-          <Button variant="primary" onClick={() => setShowAddPayment(true)}>
-            + Add Payment
-          </Button>
-        </div>
-        <PaymentList tenants={tenants} />
+        {/* Tab Content */}
+        {activeTab === "overview" && <OverviewTab tenants={tenants} />}
 
-        {/* Notice Board */}
-        <NoticeBoard />
+        {activeTab === "tenants" && (
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-end">
+              <Button variant="primary" onClick={() => setShowAddTenant(true)}>
+                + Add Tenant
+              </Button>
+            </div>
+            <TenantList />
+          </div>
+        )}
+
+        {activeTab === "payments" && (
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-end">
+              <Button variant="primary" onClick={() => setShowAddPayment(true)}>
+                + Add Payment
+              </Button>
+            </div>
+            <PaymentList tenants={tenants} />
+          </div>
+        )}
+
+        {activeTab === "notices" && <NoticeBoard />}
       </div>
     </div>
   );

@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useTheme } from "../../hooks/useTheme";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase/firebase";
 import { useAuth } from "../../hooks/useAuth";
+import { useTheme } from "../../hooks/useTheme";
 
 function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
-
   return (
     <button
       onClick={toggleTheme}
       title="Toggle theme"
-      className="p-2 rounded-full bg-blue-700 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-gray-600 transition"
+      className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
     >
       {theme === "dark" ? (
         <svg
@@ -67,11 +66,16 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-blue-600 dark:bg-gray-900 text-white shadow-md transition-colors duration-300">
-      <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+    <nav className="bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-white shadow-lg transition-all duration-300">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
         {/* Logo */}
-        <Link to="/" className="text-2xl font-bold tracking-wide">
-          🏠 Kothari PG
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center text-lg">
+            🏠
+          </div>
+          <span className="text-xl font-extrabold tracking-tight">
+            Kothari PG
+          </span>
         </Link>
 
         {/* Desktop Links */}
@@ -80,24 +84,26 @@ export default function Navbar() {
             <Link
               key={link.name}
               to={link.path}
-              className={`font-medium hover:text-blue-200 transition ${
+              className={`text-sm font-semibold transition-all duration-200 hover:text-white/80 ${
                 location.pathname === link.path
-                  ? "underline underline-offset-4"
-                  : ""
+                  ? "text-white border-b-2 border-white pb-0.5"
+                  : "text-white/80"
               }`}
             >
               {link.name}
             </Link>
           ))}
+
           <ThemeToggle />
+
           {currentUser ? (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-blue-100 dark:text-gray-300">
+              <span className="text-sm text-white/80 font-medium">
                 👋 {adminName}
               </span>
               <button
                 onClick={handleLogout}
-                className="bg-white text-blue-600 dark:text-blue-400 px-4 py-1.5 rounded-full font-semibold hover:bg-blue-100 transition"
+                className="bg-white text-blue-700 px-4 py-1.5 rounded-full text-sm font-bold hover:bg-blue-50 transition"
               >
                 Logout
               </button>
@@ -105,22 +111,22 @@ export default function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="bg-white text-blue-600 dark:text-blue-400 px-4 py-1.5 rounded-full font-semibold hover:bg-blue-100 transition"
+              className="bg-white text-blue-700 px-5 py-1.5 rounded-full text-sm font-bold hover:bg-blue-50 transition shadow"
             >
               Login
             </Link>
           )}
         </div>
 
-        {/* Mobile Hamburger */}
-        <div className="md:hidden flex items-center gap-3">
+        {/* Mobile */}
+        <div className="md:hidden flex items-center gap-2">
           <ThemeToggle />
           <button
-            className="text-white focus:outline-none"
             onClick={() => setMenuOpen(!menuOpen)}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
           >
             <svg
-              className="w-7 h-7"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -147,16 +153,14 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="md:hidden bg-blue-700 dark:bg-gray-800 px-4 pb-4 flex flex-col gap-3">
+        <div className="md:hidden bg-blue-800/90 dark:bg-gray-900/95 backdrop-blur-sm px-4 pb-4 pt-2 flex flex-col gap-3">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               to={link.path}
               onClick={() => setMenuOpen(false)}
-              className={`font-medium hover:text-blue-200 transition ${
-                location.pathname === link.path
-                  ? "underline underline-offset-4"
-                  : ""
+              className={`text-sm font-semibold py-2 border-b border-white/10 ${
+                location.pathname === link.path ? "text-white" : "text-white/75"
               }`}
             >
               {link.name}
@@ -165,7 +169,7 @@ export default function Navbar() {
           {currentUser ? (
             <button
               onClick={handleLogout}
-              className="bg-white text-blue-600 px-4 py-1.5 rounded-full font-semibold text-center hover:bg-blue-100 transition"
+              className="bg-white text-blue-700 px-4 py-2 rounded-full font-bold text-sm text-center"
             >
               Logout
             </button>
@@ -173,7 +177,7 @@ export default function Navbar() {
             <Link
               to="/login"
               onClick={() => setMenuOpen(false)}
-              className="bg-white text-blue-600 px-4 py-1.5 rounded-full font-semibold text-center hover:bg-blue-100 transition"
+              className="bg-white text-blue-700 px-4 py-2 rounded-full font-bold text-sm text-center"
             >
               Login
             </Link>

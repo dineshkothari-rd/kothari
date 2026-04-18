@@ -11,6 +11,7 @@ const rooms = [
     price: "₹8,000",
     emoji: "🛏️",
     tag: "Most Popular",
+    popular: true,
     features: [
       "Private room",
       "AC",
@@ -27,6 +28,7 @@ const rooms = [
     price: "₹5,500",
     emoji: "🛏️🛏️",
     tag: null,
+    popular: false,
     features: [
       "Shared room (2 people)",
       "AC",
@@ -42,6 +44,7 @@ const rooms = [
     price: "₹4,000",
     emoji: "🏨",
     tag: "Best Value",
+    popular: false,
     features: [
       "Shared room (3 people)",
       "Fan",
@@ -62,11 +65,20 @@ export default function Rooms() {
   return (
     <div className="bg-gray-50 dark:bg-gray-950 min-h-screen transition-colors duration-300">
       {/* Header */}
-      <div className="bg-blue-600 dark:bg-gray-900 text-white py-16 px-4 text-center">
-        <h1 className="text-4xl font-bold mb-3">Rooms & Pricing</h1>
-        <p className="text-blue-100 dark:text-gray-300 text-lg">
-          Choose what fits your needs and budget
-        </p>
+      <div className="relative bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-500 dark:from-gray-900 dark:via-blue-950 dark:to-gray-900 text-white py-20 px-4 text-center overflow-hidden">
+        <div className="absolute top-[-40px] right-[-40px] w-64 h-64 bg-white/5 rounded-full" />
+        <div className="absolute bottom-[-50px] left-[-30px] w-72 h-72 bg-white/5 rounded-full" />
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 bg-white/15 border border-white/20 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
+            🛏️ Room Options
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-3 tracking-tight">
+            Rooms & Pricing
+          </h1>
+          <p className="text-white/75 text-lg max-w-xl mx-auto">
+            Choose what fits your needs and budget
+          </p>
+        </div>
       </div>
 
       {/* Room Cards */}

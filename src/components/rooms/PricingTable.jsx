@@ -11,11 +11,15 @@ const included = [
 
 function Cell({ value }) {
   return (
-    <td className="text-center py-3 px-4">
+    <td className="text-center py-3.5 px-4">
       {value ? (
-        <span className="text-green-500 font-bold text-lg">✓</span>
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm font-bold">
+          ✓
+        </span>
       ) : (
-        <span className="text-red-400 font-bold text-lg">✗</span>
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 text-red-400 text-sm font-bold">
+          ✗
+        </span>
       )}
     </td>
   );
@@ -23,27 +27,31 @@ function Cell({ value }) {
 
 export default function PricingTable() {
   return (
-    <div className="overflow-x-auto rounded-2xl shadow-sm">
+    <div className="overflow-x-auto rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
       <table className="w-full bg-white dark:bg-gray-800 text-sm">
         <thead>
-          <tr className="bg-blue-600 text-white">
-            <th className="text-left py-4 px-4 font-semibold">Feature</th>
-            <th className="text-center py-4 px-4 font-semibold">Single</th>
-            <th className="text-center py-4 px-4 font-semibold">Double</th>
-            <th className="text-center py-4 px-4 font-semibold">Triple</th>
+          <tr className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
+            <th className="text-left py-4 px-5 font-bold rounded-tl-2xl">
+              Feature
+            </th>
+            <th className="text-center py-4 px-4 font-bold">Single</th>
+            <th className="text-center py-4 px-4 font-bold">Double</th>
+            <th className="text-center py-4 px-4 font-bold rounded-tr-2xl">
+              Triple
+            </th>
           </tr>
         </thead>
         <tbody>
           {included.map((row, i) => (
             <tr
               key={row.feature}
-              className={
+              className={`border-t border-gray-100 dark:border-gray-700 ${
                 i % 2 === 0
                   ? "bg-gray-50 dark:bg-gray-900"
                   : "bg-white dark:bg-gray-800"
-              }
+              }`}
             >
-              <td className="py-3 px-4 text-gray-700 dark:text-gray-300 font-medium">
+              <td className="py-3.5 px-5 text-gray-700 dark:text-gray-300 font-medium">
                 {row.feature}
               </td>
               <Cell value={row.single} />

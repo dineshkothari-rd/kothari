@@ -4,7 +4,8 @@ export default function Button({
   variant = "primary",
   className = "",
 }) {
-  const base = "px-6 py-2.5 rounded-full font-semibold transition duration-300";
+  const base =
+    "px-6 py-2.5 rounded-full font-semibold transition duration-300 cursor-pointer";
 
   const variants = {
     primary:

@@ -12,27 +12,38 @@ import PrivateRoute from "./routes/PrivateRoute";
 function App() {
   return (
     <BrowserRouter>
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/rooms" element={<Rooms />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/admin"
-              element={
-                <PrivateRoute>
-                  <AdminDashboard />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
+      <Routes>
+        {/* Login — no navbar/footer */}
+        <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute>
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Public pages — with navbar/footer */}
+        <Route
+          path="/*"
+          element={
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <main className="flex-grow">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/rooms" element={<Rooms />} />
+                  <Route path="/gallery" element={<Gallery />} />
+                  <Route path="/contact" element={<Contact />} />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          }
+        />
+      </Routes>
     </BrowserRouter>
   );
 }
