@@ -16,27 +16,26 @@ function App() {
         {/* Login — no navbar/footer */}
         <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/admin"
-          element={
-            <PrivateRoute>
-              <AdminDashboard />
-            </PrivateRoute>
-          }
-        />
-
         {/* Public pages — with navbar/footer */}
         <Route
           path="/*"
           element={
-            <div className="flex flex-col min-h-screen">
+            <div className="flex flex-col ">
               <Navbar />
-              <main className="flex-grow">
+              <main className="flex-grow min-h-screen">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/rooms" element={<Rooms />} />
                   <Route path="/gallery" element={<Gallery />} />
                   <Route path="/contact" element={<Contact />} />
+                  <Route
+                    path="/admin"
+                    element={
+                      <PrivateRoute>
+                        <AdminDashboard />
+                      </PrivateRoute>
+                    }
+                  />
                 </Routes>
               </main>
               <Footer />

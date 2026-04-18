@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
 
@@ -10,10 +17,11 @@ function InputField({
   onChange,
   type = "text",
   placeholder,
+  hint,
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
         {label}
       </label>
       <input
@@ -22,8 +30,9 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+        className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
       />
+      {hint && <p className="text-xs text-gray-400">{hint}</p>}
     </div>
   );
 }
@@ -32,35 +41,92 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
   const [form, setForm] = useState({
     tenantId: "",
     month: "",
-    amount: "",
-    status: "Pending",
-    paidOn: "",
+    amountPaid: "",
     note: "",
+    paidOn: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [previousBalance, setPreviousBalance] = useState(null);
+
+  const selectedTenant = tenants.find((t) => t.id === form.tenantId);
+  const totalRent = selectedTenant?.rent || 0;
+  const amountPaid = Number(form.amountPaid) || 0;
+  const effectiveTotal = previousBalance !== null ? previousBalance : totalRent;
+  const balance = effectiveTotal - amountPaid;
+
+  function getStatus() {
+    if (amountPaid === 0) return "Pending";
+    if (amountPaid >= totalRent) return "Paid";
+    return "Partial";
+  }
+
+  const status = getStatus();
+
+  const statusStyles = {
+    Paid: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    Pending:
+      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    Partial:
+      "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  };
+
+  async function handleTenantChange(e) {
+    const tenantId = e.target.value;
+    if (!tenantId) {
+      setForm((prev) => ({ ...prev, tenantId: "", amountPaid: "" }));
+      setPreviousBalance(null);
+      return;
+    }
+
+    const tenant = tenants.find((t) => t.id === tenantId);
+    let defaultAmount = tenant?.rent || 0;
+    let foundBalance = null;
+
+    try {
+      const q = query(
+        collection(db, "payments"),
+        where("tenantId", "==", tenantId),
+        where("status", "in", ["Partial", "Pending"]),
+      );
+      const snap = await getDocs(q);
+
+      if (!snap.empty) {
+        const lastPayment = snap.docs[0].data();
+        foundBalance = lastPayment.balance || 0;
+        defaultAmount = foundBalance;
+      }
+    } catch (err) {
+      console.error("Error fetching payments:", err);
+    }
+
+    setPreviousBalance(foundBalance);
+    setForm((prev) => ({
+      ...prev,
+      tenantId,
+      amountPaid: defaultAmount.toString(),
+    }));
+  }
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
   }
 
-  // Auto fill rent when tenant selected
-  function handleTenantChange(e) {
-    const tenantId = e.target.value;
-    const tenant = tenants.find((t) => t.id === tenantId);
-    setForm((prev) => ({
-      ...prev,
-      tenantId,
-      amount: tenant?.rent || "",
-    }));
-  }
-
   async function handleSubmit() {
-    if (!form.tenantId || !form.month || !form.amount) {
+    if (!form.tenantId || !form.month || !form.amountPaid) {
       setError("Tenant, month and amount are required");
       return;
     }
+    if (amountPaid < 0) {
+      setError("Amount cannot be negative");
+      return;
+    }
+    if (amountPaid > totalRent) {
+      setError(`Amount cannot exceed rent of ₹${totalRent.toLocaleString()}`);
+      return;
+    }
+
     setLoading(true);
     try {
       const tenant = tenants.find((t) => t.id === form.tenantId);
@@ -69,10 +135,12 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
         tenantName: tenant?.name || "",
         tenantRoom: tenant?.room || "",
         month: form.month,
-        amount: Number(form.amount),
-        status: form.status,
+        totalRent,
+        amountPaid,
+        balance: balance < 0 ? 0 : balance,
+        status,
         paidOn:
-          form.status === "Paid"
+          amountPaid > 0
             ? form.paidOn || new Date().toLocaleDateString("en-IN")
             : "",
         note: form.note,
@@ -81,7 +149,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
       onSuccess?.();
       onClose?.();
     } catch (err) {
-      setError("Error adding payment: " + err.message);
+      setError("Error: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -89,10 +157,12 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-8 overflow-y-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg flex flex-col gap-5">
+      <div
+        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-${selectedTenant ? "4xl" : "lg"} flex flex-col gap-5`}
+      >
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-            💰 Add Payment Record
+            💰 Add Payment
           </h2>
           <button
             onClick={onClose}
@@ -103,98 +173,171 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
         </div>
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl">
             {error}
           </div>
         )}
+        <div className={`grid grid-cols-${selectedTenant ? "2" : "1"} gap-2`}>
+          <div>
+            {/* Tenant Select */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                Select Tenant *
+              </label>
+              <select
+                value={form.tenantId}
+                onChange={handleTenantChange}
+                className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select tenant...</option>
+                {tenants.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} — {t.room} (₹{t.rent?.toLocaleString()}/mo)
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {/* Tenant Select */}
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            Select Tenant *
-          </label>
-          <select
-            name="tenantId"
-            value={form.tenantId}
-            onChange={handleTenantChange}
-            className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select tenant...</option>
-            {tenants.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name} — {t.room}
-              </option>
-            ))}
-          </select>
-        </div>
+            {/* Month */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                Month *
+              </label>
+              <input
+                type="month"
+                name="month"
+                value={form.month}
+                onChange={handleChange}
+                className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Month */}
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Month *
-            </label>
-            <input
-              type="month"
-              name="month"
-              value={form.month}
-              onChange={handleChange}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Amount */}
-          <InputField
-            label="Amount (₹) *"
-            name="amount"
-            type="number"
-            value={form.amount}
-            onChange={handleChange}
-            placeholder="8000"
-          />
-
-          {/* Status */}
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Status
-            </label>
-            <select
-              name="status"
-              value={form.status}
-              onChange={handleChange}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Pending">Pending</option>
-              <option value="Paid">Paid</option>
-              <option value="Overdue">Overdue</option>
-            </select>
-          </div>
-
-          {/* Paid On */}
-          {form.status === "Paid" && (
+            {/* Amount Paid */}
             <InputField
-              label="Paid On"
-              name="paidOn"
-              type="date"
-              value={form.paidOn}
+              label="Amount Paid (₹) *"
+              name="amountPaid"
+              type="number"
+              value={form.amountPaid}
               onChange={handleChange}
+              placeholder={
+                totalRent
+                  ? `Max ₹${totalRent.toLocaleString()}`
+                  : "Select tenant first"
+              }
+              hint={
+                totalRent ? `Total rent: ₹${totalRent.toLocaleString()}` : ""
+              }
             />
-          )}
-        </div>
 
-        {/* Note */}
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            Note (optional)
-          </label>
-          <input
-            type="text"
-            name="note"
-            value={form.note}
-            onChange={handleChange}
-            placeholder="e.g. Paid via UPI, Late fee included..."
-            className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+            {/* Paid On */}
+            {amountPaid > 0 && (
+              <InputField
+                label="Paid On"
+                name="paidOn"
+                type="date"
+                value={form.paidOn}
+                onChange={handleChange}
+              />
+            )}
+
+            {/* Note */}
+            <InputField
+              label="Note (optional)"
+              name="note"
+              value={form.note}
+              onChange={handleChange}
+              placeholder="e.g. Paid via UPI, partial payment..."
+            />
+          </div>
+          {selectedTenant && (
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-4 mt-6 flex flex-col gap-3 border border-gray-100 dark:border-gray-700">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                Payment Summary
+              </p>
+
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  Monthly Rent
+                </span>
+                <span className="font-bold text-gray-800 dark:text-white">
+                  ₹{totalRent.toLocaleString()}
+                </span>
+              </div>
+
+              {previousBalance !== null && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    Previous Balance Due
+                  </span>
+                  <span className="font-bold text-orange-500">
+                    ₹{previousBalance.toLocaleString()}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  Paying Now
+                </span>
+                <span className="font-bold text-green-600 dark:text-green-400">
+                  ₹{amountPaid.toLocaleString()}
+                </span>
+              </div>
+
+              <div className="h-px bg-gray-200 dark:bg-gray-700" />
+
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  Remaining Balance
+                </span>
+                <span
+                  className={`font-extrabold text-lg ${balance > 0 ? "text-red-500" : "text-green-500"}`}
+                >
+                  ₹{Math.max(0, balance).toLocaleString()}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  Status
+                </span>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold ${statusStyles[status]}`}
+                >
+                  {status === "Paid"
+                    ? "✅ Paid"
+                    : status === "Partial"
+                      ? "🔶 Partial"
+                      : "⏳ Pending"}
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                <div
+                  className={`h-2 rounded-full transition-all duration-500 ${
+                    status === "Paid"
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                      : status === "Partial"
+                        ? "bg-gradient-to-r from-orange-400 to-amber-500"
+                        : "bg-gray-300"
+                  }`}
+                  style={{
+                    width: `${Math.min(100, Math.round((amountPaid / effectiveTotal) * 100))}%`,
+                  }}
+                />
+              </div>
+              <p className="text-xs text-gray-400 text-right">
+                {effectiveTotal > 0
+                  ? Math.min(
+                      100,
+                      Math.round((amountPaid / effectiveTotal) * 100),
+                    )
+                  : 0}
+                % paid
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3 pt-2">
