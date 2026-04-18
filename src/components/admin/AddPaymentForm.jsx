@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   collection,
   addDoc,
@@ -52,12 +52,19 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
   const selectedTenant = tenants.find((t) => t.id === form.tenantId);
   const totalRent = selectedTenant?.rent || 0;
   const amountPaid = Number(form.amountPaid) || 0;
-  const effectiveTotal = previousBalance !== null ? previousBalance : totalRent;
-  const balance = effectiveTotal - amountPaid;
+  const previousPaid =
+    previousBalance !== null ? totalRent - previousBalance : 0;
+
+  const totalPaidTillNow = previousPaid + amountPaid;
+
+  const balance = Math.max(0, totalRent - totalPaidTillNow);
+
+  const isFullyPaid =
+    previousBalance !== null && totalRent > 0 && previousBalance <= 0;
 
   function getStatus() {
-    if (amountPaid === 0) return "Pending";
-    if (amountPaid >= totalRent) return "Paid";
+    if (totalPaidTillNow === 0) return "Pending";
+    if (totalPaidTillNow >= totalRent) return "Paid";
     return "Partial";
   }
 
@@ -71,42 +78,62 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
       "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
   };
 
-  async function handleTenantChange(e) {
-    const tenantId = e.target.value;
-    if (!tenantId) {
-      setForm((prev) => ({ ...prev, tenantId: "", amountPaid: "" }));
-      setPreviousBalance(null);
-      return;
-    }
-
-    const tenant = tenants.find((t) => t.id === tenantId);
-    let defaultAmount = tenant?.rent || 0;
-    let foundBalance = null;
+  async function fetchBalance(tenantId, month) {
+    if (!tenantId || !month) return;
 
     try {
+      const tenant = tenants.find((t) => t.id === tenantId);
+      const totalRent = tenant?.rent || 0;
+
       const q = query(
         collection(db, "payments"),
         where("tenantId", "==", tenantId),
-        where("status", "in", ["Partial", "Pending"]),
+        where("month", "==", month),
       );
+
       const snap = await getDocs(q);
 
-      if (!snap.empty) {
-        const lastPayment = snap.docs[0].data();
-        foundBalance = lastPayment.balance || 0;
-        defaultAmount = foundBalance;
+      let totalPaid = 0;
+
+      snap.forEach((doc) => {
+        totalPaid += doc.data().amountPaid || 0;
+      });
+
+      const balance = Math.max(0, totalRent - totalPaid);
+
+      setPreviousBalance(balance);
+
+      setForm((prev) => ({
+        ...prev,
+        amountPaid: balance > 0 ? balance.toString() : "",
+      }));
+
+      if (balance <= 0) {
+        setError("This month's rent is already fully paid");
+      } else {
+        setError("");
       }
     } catch (err) {
-      console.error("Error fetching payments:", err);
+      console.error(err);
     }
+  }
 
-    setPreviousBalance(foundBalance);
+  function handleTenantChange(e) {
+    const tenantId = e.target.value;
+
     setForm((prev) => ({
       ...prev,
       tenantId,
-      amountPaid: defaultAmount.toString(),
     }));
+
+    setPreviousBalance(null);
   }
+
+  useEffect(() => {
+    if (form.tenantId && form.month) {
+      fetchBalance(form.tenantId, form.month);
+    }
+  }, [form.tenantId, form.month]);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -118,18 +145,48 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
       setError("Tenant, month and amount are required");
       return;
     }
-    if (amountPaid < 0) {
-      setError("Amount cannot be negative");
-      return;
-    }
-    if (amountPaid > totalRent) {
-      setError(`Amount cannot exceed rent of ₹${totalRent.toLocaleString()}`);
+
+    const tenant = tenants.find((t) => t.id === form.tenantId);
+    const totalRent = tenant?.rent || 0;
+    const amountPaid = Number(form.amountPaid) || 0;
+
+    if (amountPaid <= 0) {
+      setError("Enter valid amount");
       return;
     }
 
     setLoading(true);
     try {
-      const tenant = tenants.find((t) => t.id === form.tenantId);
+      const q = query(
+        collection(db, "payments"),
+        where("tenantId", "==", form.tenantId),
+        where("month", "==", form.month),
+      );
+
+      const snap = await getDocs(q);
+
+      let totalPaid = 0;
+
+      snap.forEach((doc) => {
+        totalPaid += doc.data().amountPaid || 0;
+      });
+
+      const newTotalPaid = totalPaid + amountPaid;
+
+      if (newTotalPaid > totalRent) {
+        setError(`Total exceeds rent. Remaining: ₹${totalRent - totalPaid}`);
+        return;
+      }
+
+      const balance = Math.max(0, totalRent - newTotalPaid);
+
+      const status =
+        newTotalPaid === 0
+          ? "Pending"
+          : newTotalPaid >= totalRent
+            ? "Paid"
+            : "Partial";
+
       await addDoc(collection(db, "payments"), {
         tenantId: form.tenantId,
         tenantName: tenant?.name || "",
@@ -137,7 +194,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
         month: form.month,
         totalRent,
         amountPaid,
-        balance: balance < 0 ? 0 : balance,
+        balance,
         status,
         paidOn:
           amountPaid > 0
@@ -155,10 +212,13 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     }
   }
 
+  const showSummaryCard =
+    selectedTenant && (form.month || previousBalance !== null);
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-8 overflow-y-auto">
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-${selectedTenant ? "4xl" : "lg"} flex flex-col gap-5`}
+        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-${showSummaryCard ? "4xl" : "lg"} flex flex-col gap-5`}
       >
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white">
@@ -177,7 +237,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
             {error}
           </div>
         )}
-        <div className={`grid grid-cols-${selectedTenant ? "2" : "1"} gap-2`}>
+        <div className={`grid grid-cols-${showSummaryCard ? "2" : "1"} gap-2`}>
           <div>
             {/* Tenant Select */}
             <div className="flex flex-col gap-1.5">
@@ -249,7 +309,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
               placeholder="e.g. Paid via UPI, partial payment..."
             />
           </div>
-          {selectedTenant && (
+          {showSummaryCard && (
             <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-4 mt-6 flex flex-col gap-3 border border-gray-100 dark:border-gray-700">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                 Payment Summary
@@ -323,17 +383,15 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
                         : "bg-gray-300"
                   }`}
                   style={{
-                    width: `${Math.min(100, Math.round((amountPaid / effectiveTotal) * 100))}%`,
+                    width: `${Math.min(100, Math.round((totalPaidTillNow / totalRent) * 100))}%`,
                   }}
                 />
               </div>
               <p className="text-xs text-gray-400 text-right">
-                {effectiveTotal > 0
-                  ? Math.min(
-                      100,
-                      Math.round((amountPaid / effectiveTotal) * 100),
-                    )
-                  : 0}
+                {Math.min(
+                  100,
+                  Math.round((totalPaidTillNow / totalRent) * 100),
+                ) || 0}
                 % paid
               </p>
             </div>
@@ -344,8 +402,19 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleSubmit} className="flex-1">
-            {loading ? "Adding..." : "Add Payment"}
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            className={`flex-1 ${
+              isFullyPaid || loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isFullyPaid || loading}
+          >
+            {loading
+              ? "Adding..."
+              : isFullyPaid
+                ? "Already Paid"
+                : "Add Payment"}
           </Button>
         </div>
       </div>

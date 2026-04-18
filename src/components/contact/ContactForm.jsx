@@ -85,7 +85,6 @@ export default function ContactForm() {
       alert("Please fill in all required fields");
       return;
     }
-    console.log("Form submitted:", form);
     setSubmitted(true);
     setForm(initialState);
   }

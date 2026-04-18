@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
-
-const statusStyles = {
-  Paid: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  Pending:
-    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  Overdue: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-};
+import { calculateSummary } from "../../utils/helper";
+import PaymentsTable from "../paymentsTable/PaymentsTable";
 
 const avatarColors = [
   "from-blue-500 to-cyan-500",
@@ -112,6 +107,8 @@ export default function OverviewTab({ tenants }) {
     danger: "🚨",
   };
 
+  const { normalized } = calculateSummary(payments);
+
   return (
     <div className="flex flex-col gap-6">
       {/* Stats */}
@@ -194,57 +191,7 @@ export default function OverviewTab({ tenants }) {
         <h3 className="text-base font-bold text-gray-800 dark:text-white mb-4">
           💰 Recent Payments
         </h3>
-        {payments.length === 0 ? (
-          <p className="text-gray-400 text-sm text-center py-6">
-            No payments yet
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-700">
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-                    Tenant
-                  </th>
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-                    Month
-                  </th>
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-                    Amount
-                  </th>
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.slice(0, 5).map((p) => (
-                  <tr
-                    key={p.id}
-                    className="border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition"
-                  >
-                    <td className="py-2.5 px-3 font-medium text-gray-800 dark:text-white">
-                      {p.tenantName}
-                    </td>
-                    <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
-                      {p.month}
-                    </td>
-                    <td className="py-2.5 px-3 font-semibold text-gray-800 dark:text-white">
-                      ₹{p.amount?.toLocaleString()}
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[p.status]}`}
-                      >
-                        {p.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <PaymentsTable payments={normalized.slice(0, 5)} />
       </div>
     </div>
   );

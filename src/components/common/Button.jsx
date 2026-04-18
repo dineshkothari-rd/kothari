@@ -3,9 +3,10 @@ export default function Button({
   onClick,
   variant = "primary",
   className = "",
+  disabled = false,
 }) {
   const base =
-    "px-6 py-2.5 rounded-full font-semibold transition duration-300 cursor-pointer";
+    "px-6 py-2.5 rounded-full font-semibold transition duration-300 ";
 
   const variants = {
     primary:
@@ -19,6 +20,7 @@ export default function Button({
     <button
       onClick={onClick}
       className={`${base} ${variants[variant]} ${className}`}
+      disabled={disabled}
     >
       {children}
     </button>

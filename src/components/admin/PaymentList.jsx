@@ -8,22 +8,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
-
-const statusStyles = {
-  Paid: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  Pending:
-    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  Partial:
-    "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  Overdue: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-};
-
-const statusIcons = {
-  Paid: "✅",
-  Pending: "⏳",
-  Partial: "🔶",
-  Overdue: "🚨",
-};
+import { calculateSummary } from "../../utils/helper";
+import PaymentsTable from "../paymentsTable/PaymentsTable";
 
 function BalancePayModal({ payment, onClose }) {
   const [amount, setAmount] = useState(payment.balance || 0);
@@ -155,21 +141,8 @@ export default function PaymentList({ tenants }) {
     return matchTenant && matchStatus;
   });
 
-  const totalPaid = filtered
-    .filter((p) => p.status === "Paid")
-    .reduce((s, p) => s + (p.totalRent || 0), 0);
-  const totalPartial = filtered
-    .filter((p) => p.status === "Partial")
-    .reduce((s, p) => s + (p.amountPaid || 0), 0);
-  const totalBalance = filtered
-    .filter((p) => p.status === "Partial")
-    .reduce((s, p) => s + (p.balance || 0), 0);
-  const totalPending = filtered
-    .filter((p) => p.status === "Pending")
-    .reduce((s, p) => s + (p.totalRent || 0), 0);
-  const totalOverdue = filtered
-    .filter((p) => p.status === "Overdue")
-    .reduce((s, p) => s + (p.totalRent || 0), 0);
+  const { totalPaid, totalPartial, totalOverdue, totalBalance } =
+    calculateSummary(filtered);
 
   if (loading) return <p className="text-gray-400">Loading payments...</p>;
 
@@ -187,11 +160,37 @@ export default function PaymentList({ tenants }) {
           onClose={() => setBalancePayment(null)}
         />
       )}
-
-      <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-        💰 Payment Records
-      </h2>
-
+      <div className="flex items-center justify-between ">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+          💰 Payment Records
+        </h2>
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <select
+            value={filterTenant}
+            onChange={(e) => setFilterTenant(e.target.value)}
+            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Tenants</option>
+            {tenants.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Status</option>
+            <option value="Paid">✅ Paid</option>
+            <option value="Partial">🔶 Partial</option>
+            <option value="Pending">⏳ Pending</option>
+            <option value="Overdue">🚨 Overdue</option>
+          </select>
+        </div>
+      </div>
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4">
@@ -209,18 +208,13 @@ export default function PaymentList({ tenants }) {
           <p className="text-xl font-extrabold text-orange-700 dark:text-orange-300 mt-1">
             ₹{totalPartial.toLocaleString()}
           </p>
-          {totalBalance > 0 && (
-            <p className="text-xs text-red-500 mt-0.5">
-              ₹{totalBalance.toLocaleString()} pending
-            </p>
-          )}
         </div>
         <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl p-4">
           <p className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold">
             ⏳ Pending
           </p>
           <p className="text-xl font-extrabold text-yellow-700 dark:text-yellow-300 mt-1">
-            ₹{totalPending.toLocaleString()}
+            ₹{totalBalance.toLocaleString()}
           </p>
         </div>
         <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-4">
@@ -232,145 +226,11 @@ export default function PaymentList({ tenants }) {
           </p>
         </div>
       </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <select
-          value={filterTenant}
-          onChange={(e) => setFilterTenant(e.target.value)}
-          className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">All Tenants</option>
-          {tenants.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">All Status</option>
-          <option value="Paid">✅ Paid</option>
-          <option value="Partial">🔶 Partial</option>
-          <option value="Pending">⏳ Pending</option>
-          <option value="Overdue">🚨 Overdue</option>
-        </select>
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center text-gray-400 border border-gray-100 dark:border-gray-700">
-          No payment records found.
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {filtered.map((p) => (
-            <div
-              key={p.id}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-md transition"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                {/* Left */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-gray-800 dark:text-white">
-                      {p.tenantName}
-                    </p>
-                    <span className="text-xs text-gray-400">
-                      {p.tenantRoom}
-                    </span>
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${statusStyles[p.status]}`}
-                    >
-                      {statusIcons[p.status]} {p.status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-400 mt-0.5">
-                    {p.month} {p.paidOn ? `• Paid on ${p.paidOn}` : ""}
-                  </p>
-                  {p.note && (
-                    <p className="text-xs text-gray-400 mt-0.5 italic">
-                      {p.note}
-                    </p>
-                  )}
-                </div>
-
-                {/* Right — Amounts */}
-                <div className="flex items-center gap-4 flex-shrink-0">
-                  <div className="text-right">
-                    <p className="text-xs text-gray-400">Total Rent</p>
-                    <p className="font-bold text-gray-800 dark:text-white">
-                      ₹{p.totalRent?.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-green-500">Paid</p>
-                    <p className="font-bold text-green-600 dark:text-green-400">
-                      ₹{p.amountPaid?.toLocaleString()}
-                    </p>
-                  </div>
-                  {p.balance > 0 && (
-                    <div className="text-right">
-                      <p className="text-xs text-red-400">Balance</p>
-                      <p className="font-bold text-red-500">
-                        ₹{p.balance?.toLocaleString()}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              {p.totalRent > 0 && (
-                <div className="mt-3">
-                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className={`h-1.5 rounded-full transition-all duration-500 ${
-                        p.status === "Paid"
-                          ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                          : p.status === "Partial"
-                            ? "bg-gradient-to-r from-orange-400 to-amber-500"
-                            : "bg-gray-300 dark:bg-gray-600"
-                      }`}
-                      style={{
-                        width: `${Math.min(100, Math.round(((p.amountPaid || 0) / p.totalRent) * 100))}%`,
-                      }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {Math.min(
-                      100,
-                      Math.round(((p.amountPaid || 0) / p.totalRent) * 100),
-                    )}
-                    % paid
-                  </p>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                {p.status === "Partial" && (
-                  <button
-                    onClick={() => setBalancePayment(p)}
-                    className="text-sm font-semibold text-orange-600 dark:text-orange-400 hover:underline"
-                  >
-                    🔶 Pay Balance (₹{p.balance?.toLocaleString()})
-                  </button>
-                )}
-
-                <button
-                  onClick={() => setDeletePayment(p.id)}
-                  className="text-red-500 hover:underline text-xs font-medium"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <PaymentsTable
+        payments={filtered}
+        canDeletePayment={true}
+        setDeletePayment={setDeletePayment}
+      />
     </div>
   );
 }

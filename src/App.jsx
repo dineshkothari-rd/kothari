@@ -22,7 +22,7 @@ function App() {
           element={
             <div className="flex flex-col ">
               <Navbar />
-              <main className="flex-grow min-h-screen">
+              <main className="grow min-h-screen">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/rooms" element={<Rooms />} />
