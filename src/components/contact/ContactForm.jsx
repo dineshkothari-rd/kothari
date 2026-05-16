@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Button from "../common/Button";
 
 const initialState = {
   name: "",
@@ -27,7 +28,7 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
+        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
       />
     </div>
   );
@@ -43,7 +44,7 @@ function SelectField({ label, name, value, onChange }) {
         name={name}
         value={value}
         onChange={onChange}
-        className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
+        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
       >
         <option value="">Select room type</option>
         <option value="Single">Single Occupancy — ₹8,000/mo</option>
@@ -66,7 +67,7 @@ function TextAreaField({ label, name, value, onChange, placeholder }) {
         onChange={onChange}
         placeholder={placeholder}
         rows={4}
-        className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm resize-none"
+        className="resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
       />
     </div>
   );
@@ -80,7 +81,9 @@ export default function ContactForm() {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit() {
+  function handleSubmit(event) {
+    event.preventDefault();
+
     if (!form.name || !form.phone || !form.email) {
       alert("Please fill in all required fields");
       return;
@@ -91,7 +94,7 @@ export default function ContactForm() {
 
   if (submitted) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 shadow-sm border border-gray-100 dark:border-gray-700 text-center flex flex-col items-center gap-4">
+      <div className="flex min-h-full flex-col items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-10">
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-4xl shadow-lg">
           🎉
         </div>
@@ -101,18 +104,21 @@ export default function ContactForm() {
         <p className="text-gray-500 dark:text-gray-400 max-w-xs">
           We'll contact you within 24 hours to schedule your visit.
         </p>
-        <button
+        <Button
           onClick={() => setSubmitted(false)}
-          className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-8 py-3 rounded-full font-bold hover:opacity-90 transition shadow-md mt-2"
+          className="mt-2 px-8"
         >
           Send Another
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-5">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8"
+    >
       <div>
         <h2 className="text-2xl font-extrabold text-gray-800 dark:text-white mb-1">
           Book a Free Visit 🏠
@@ -159,12 +165,9 @@ export default function ContactForm() {
         placeholder="Any specific requirements or questions..."
       />
 
-      <button
-        onClick={handleSubmit}
-        className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 rounded-full font-bold hover:opacity-90 transition shadow-md"
-      >
+      <Button type="submit" className="w-full">
         Send Enquiry
-      </button>
-    </div>
+      </Button>
+    </form>
   );
 }

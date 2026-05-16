@@ -1,48 +1,60 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
-import Home from "./pages/Home";
-import Rooms from "./pages/Rooms";
-import Gallery from "./pages/Gallery";
-import Contact from "./pages/Contact";
-import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard";
 import PrivateRoute from "./routes/PrivateRoute";
+
+const Home = lazy(() => import("./pages/Home"));
+const Rooms = lazy(() => import("./pages/Rooms"));
+const Gallery = lazy(() => import("./pages/Gallery"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Login = lazy(() => import("./pages/Login"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+
+function PageLoader() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center bg-slate-50 px-4 text-sm font-semibold text-slate-500 dark:bg-gray-950 dark:text-slate-400">
+      Loading...
+    </div>
+  );
+}
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Login — no navbar/footer */}
-        <Route path="/login" element={<Login />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Login — no navbar/footer */}
+          <Route path="/login" element={<Login />} />
 
-        {/* Public pages — with navbar/footer */}
-        <Route
-          path="/*"
-          element={
-            <div className="flex flex-col ">
-              <Navbar />
-              <main className="grow min-h-screen">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/rooms" element={<Rooms />} />
-                  <Route path="/gallery" element={<Gallery />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route
-                    path="/admin"
-                    element={
-                      <PrivateRoute>
-                        <AdminDashboard />
-                      </PrivateRoute>
-                    }
-                  />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
-          }
-        />
-      </Routes>
+          {/* Public pages — with navbar/footer */}
+          <Route
+            path="/*"
+            element={
+              <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-gray-950">
+                <Navbar />
+                <main className="grow">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/rooms" element={<Rooms />} />
+                    <Route path="/gallery" element={<Gallery />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route
+                      path="/admin"
+                      element={
+                        <PrivateRoute>
+                          <AdminDashboard />
+                        </PrivateRoute>
+                      }
+                    />
+                  </Routes>
+                </main>
+                <Footer />
+              </div>
+            }
+          />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

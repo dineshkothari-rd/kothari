@@ -1,29 +1,19 @@
 import ContactForm from "../components/contact/ContactForm";
 import ContactInfo from "../components/contact/ContactInfo";
+import PageHeader from "../components/common/PageHeader";
 
 export default function Contact() {
   return (
-    <div className="bg-gray-50 dark:bg-gray-950 min-h-screen transition-colors duration-300">
-      {/* Header */}
-      <div className="relative bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-500 dark:from-gray-900 dark:via-blue-950 dark:to-gray-900 text-white py-20 px-4 text-center overflow-hidden">
-        <div className="absolute top-[-40px] right-[-40px] w-64 h-64 bg-white/5 rounded-full" />
-        <div className="absolute bottom-[-50px] left-[-30px] w-72 h-72 bg-white/5 rounded-full" />
-        <div className="relative">
-          <div className="inline-flex items-center gap-2 bg-white/15 border border-white/20 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
-            📬 Get In Touch
-          </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-3 tracking-tight">
-            Contact Us
-          </h1>
-          <p className="text-white/75 text-lg max-w-xl mx-auto">
-            We're here to help. Reach out anytime!
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50 transition-colors duration-300 dark:bg-gray-950">
+      <PageHeader
+        eyebrow="Get In Touch"
+        title="Contact Us"
+        subtitle="Book a visit, ask a question, or check room availability."
+      />
 
       {/* Content */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+      <section className="px-4 py-12 sm:px-6 sm:py-16">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)] lg:gap-8">
           <ContactForm />
           <ContactInfo />
         </div>

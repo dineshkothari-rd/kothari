@@ -1,57 +1,53 @@
 import { Link } from "react-router-dom";
 
+const highlights = [
+  { value: "50+", label: "Happy Tenants" },
+  { value: "4.9", label: "Average Rating" },
+  { value: "3+", label: "Years Running" },
+];
+
 export default function HeroSection() {
   return (
-    <section className="relative bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-500 dark:from-gray-900 dark:via-blue-950 dark:to-gray-900 text-white overflow-hidden">
-      {/* Background circles */}
-      <div className="absolute top-[-60px] right-[-60px] w-72 h-72 bg-white/5 rounded-full" />
-      <div className="absolute bottom-[-80px] left-[-40px] w-80 h-80 bg-white/5 rounded-full" />
-      <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-
-      <div className="relative max-w-5xl mx-auto px-4 py-24 text-center">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-sm font-semibold mb-6">
-          🏆 #1 Rated PG in Jaipur
-        </div>
-
-        {/* Heading */}
-        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight mb-5">
-          Your Home Away <br />
-          <span className="text-cyan-300">From Home 🏠</span>
-        </h1>
-
-        {/* Subheading */}
-        <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8">
-          Premium PG accommodation in Jaipur with all modern amenities.
-          Comfortable, safe and affordable living for students & professionals.
+    <section className="bg-[linear-gradient(135deg,#1d4ed8_0%,#0891b2_48%,#0f766e_100%)] text-white dark:bg-[linear-gradient(135deg,#020617_0%,#0f172a_55%,#134e4a_100%)]">
+      <div className="mx-auto flex min-h-[calc(100vh-64px)] max-w-6xl flex-col justify-center px-4 py-16 text-center sm:px-6 lg:min-h-[680px]">
+        <p className="mx-auto mb-6 inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-semibold text-white/90 shadow-sm backdrop-blur">
+          Rated PG accommodation in Jaipur
         </p>
 
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-14">
+        <h1 className="mx-auto max-w-4xl text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+          Comfortable PG living for students and professionals
+        </h1>
+
+        <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/78 sm:text-lg lg:text-xl">
+          Clean rooms, reliable facilities, home-style meals, and simple admin
+          support in one dependable place.
+        </p>
+
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link
             to="/rooms"
-            className="bg-white text-blue-700 px-8 py-3 rounded-full font-bold text-base hover:bg-blue-50 transition shadow-lg"
+            className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 py-3 text-sm font-bold text-blue-700 shadow-lg transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             View Rooms & Pricing
           </Link>
           <Link
             to="/contact"
-            className="bg-white/10 backdrop-blur-sm border-2 border-white/40 text-white px-8 py-3 rounded-full font-bold text-base hover:bg-white/20 transition"
+            className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/40 bg-white/10 px-7 py-3 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             Book a Free Visit
           </Link>
         </div>
 
-        {/* Stats Row */}
-        <div className="flex flex-wrap justify-center gap-8 md:gap-16">
-          {[
-            { value: "50+", label: "Happy Tenants" },
-            { value: "4.9★", label: "Average Rating" },
-            { value: "3+", label: "Years Running" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="text-3xl font-extrabold text-white">{stat.value}</p>
-              <p className="text-sm text-white/60 mt-1">{stat.label}</p>
+        <div className="mx-auto mt-12 grid w-full max-w-3xl grid-cols-1 gap-3 min-[460px]:grid-cols-3">
+          {highlights.map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-2xl border border-white/15 bg-white/10 px-4 py-5 backdrop-blur"
+            >
+              <p className="text-3xl font-extrabold text-white">
+                {stat.value}
+              </p>
+              <p className="mt-1 text-sm text-white/65">{stat.label}</p>
             </div>
           ))}
         </div>

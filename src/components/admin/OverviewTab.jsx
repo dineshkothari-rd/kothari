@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "../../firebase/firebase";
 import { calculateSummary } from "../../utils/helper";
 import PaymentsTable from "../paymentsTable/PaymentsTable";
+import { useFirestoreCollection } from "../../hooks/useFirestoreCollection";
 
 const avatarColors = [
   "from-blue-500 to-cyan-500",
@@ -39,25 +37,12 @@ function StatCard({ icon, label, value, color }) {
 }
 
 export default function OverviewTab({ tenants }) {
-  const [payments, setPayments] = useState([]);
-  const [notices, setNotices] = useState([]);
-
-  useEffect(() => {
-    const unsubPayments = onSnapshot(collection(db, "payments"), (snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      data.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
-      setPayments(data);
-    });
-    const unsubNotices = onSnapshot(collection(db, "notices"), (snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      data.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
-      setNotices(data);
-    });
-    return () => {
-      unsubPayments();
-      unsubNotices();
-    };
-  }, []);
+  const { data: payments } = useFirestoreCollection("payments", {
+    sortBy: "createdAt",
+  });
+  const { data: notices } = useFirestoreCollection("notices", {
+    sortBy: "createdAt",
+  });
 
   const totalRevenue = tenants.reduce((sum, t) => sum + (t.rent || 0), 0);
   const pendingCount = payments.filter((p) => p.status === "Pending").length;

@@ -1,15 +1,10 @@
-import { useState, useEffect } from "react";
-import {
-  collection,
-  onSnapshot,
-  doc,
-  updateDoc,
-  deleteDoc,
-} from "firebase/firestore";
+import { useMemo, useState } from "react";
+import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
 import { calculateSummary } from "../../utils/helper";
 import PaymentsTable from "../paymentsTable/PaymentsTable";
+import { useFirestoreCollection } from "../../hooks/useFirestoreCollection";
 
 function BalancePayModal({ payment, onClose }) {
   const [amount, setAmount] = useState(payment.balance || 0);
@@ -113,33 +108,32 @@ function ConfirmDelete({ onConfirm, onCancel }) {
 }
 
 export default function PaymentList({ tenants }) {
-  const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [deletePayment, setDeletePayment] = useState(null);
   const [balancePayment, setBalancePayment] = useState(null);
   const [filterTenant, setFilterTenant] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "payments"), (snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      data.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
-      setPayments(data);
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
+  const { data: payments, loading } = useFirestoreCollection("payments", {
+    sortBy: "createdAt",
+  });
 
   async function handleDelete(id) {
     await deleteDoc(doc(db, "payments", id));
     setDeletePayment(null);
   }
 
-  const filtered = payments.filter((p) => {
-    const matchTenant = filterTenant ? p.tenantId === filterTenant : true;
-    const matchStatus = filterStatus ? p.status === filterStatus : true;
-    return matchTenant && matchStatus;
-  });
+  const filtered = useMemo(
+    () =>
+      payments.filter((payment) => {
+        const matchTenant = filterTenant
+          ? payment.tenantId === filterTenant
+          : true;
+        const matchStatus = filterStatus
+          ? payment.status === filterStatus
+          : true;
+        return matchTenant && matchStatus;
+      }),
+    [filterStatus, filterTenant, payments],
+  );
 
   const { totalPaid, totalPartial, totalOverdue, totalBalance } =
     calculateSummary(filtered);
@@ -147,7 +141,7 @@ export default function PaymentList({ tenants }) {
   if (loading) return <p className="text-gray-400">Loading payments...</p>;
 
   return (
-    <div>
+    <div className="min-w-0">
       {deletePayment && (
         <ConfirmDelete
           onConfirm={() => handleDelete(deletePayment)}
@@ -160,16 +154,16 @@ export default function PaymentList({ tenants }) {
           onClose={() => setBalancePayment(null)}
         />
       )}
-      <div className="flex items-center justify-between ">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
           💰 Payment Records
         </h2>
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto">
           <select
             value={filterTenant}
             onChange={(e) => setFilterTenant(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
           >
             <option value="">All Tenants</option>
             {tenants.map((t) => (
@@ -181,7 +175,7 @@ export default function PaymentList({ tenants }) {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
           >
             <option value="">All Status</option>
             <option value="Paid">✅ Paid</option>
@@ -192,7 +186,7 @@ export default function PaymentList({ tenants }) {
         </div>
       </div>
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-4">
         <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4">
           <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
             ✅ Fully Paid

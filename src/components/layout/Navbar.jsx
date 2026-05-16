@@ -11,7 +11,8 @@ function ThemeToggle() {
     <button
       onClick={toggleTheme}
       title="Toggle theme"
-      className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
+      aria-label="Toggle theme"
+      className="rounded-full bg-white/10 p-2 transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
     >
       {theme === "dark" ? (
         <svg
@@ -62,24 +63,25 @@ export default function Navbar() {
 
   async function handleLogout() {
     await signOut(auth);
+    setMenuOpen(false);
     navigate("/login");
   }
 
   return (
-    <nav className="bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-white shadow-lg transition-all duration-300">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+    <nav className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 text-white shadow-lg transition-all duration-300 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center text-lg">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-lg">
             🏠
           </div>
-          <span className="text-xl font-extrabold tracking-tight">
+          <span className="text-lg font-extrabold tracking-tight sm:text-xl">
             Kothari PG
           </span>
         </Link>
 
         {/* Desktop Links */}
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden items-center gap-5 md:flex lg:gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.name}
@@ -122,8 +124,10 @@ export default function Navbar() {
         <div className="md:hidden flex items-center gap-2">
           <ThemeToggle />
           <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-expanded={menuOpen}
+            aria-label="Toggle navigation menu"
+            className="rounded-xl bg-white/10 p-2 transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
           >
             <svg
               className="w-5 h-5"
@@ -153,7 +157,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="md:hidden bg-blue-800/90 dark:bg-gray-900/95 backdrop-blur-sm px-4 pb-4 pt-2 flex flex-col gap-3">
+        <div className="flex flex-col gap-2 border-t border-white/10 bg-blue-800/95 px-4 pb-4 pt-2 backdrop-blur-sm dark:bg-gray-900/95 md:hidden">
           {navLinks.map((link) => (
             <Link
               key={link.name}

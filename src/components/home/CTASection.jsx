@@ -2,24 +2,24 @@ import { Link } from "react-router-dom";
 
 export default function CTASection() {
   return (
-    <section className="py-20 px-4 bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-500 dark:from-gray-900 dark:via-blue-950 dark:to-gray-900 transition-colors duration-300">
-      <div className="max-w-3xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
-          Ready to Move In? 🏠
+    <section className="bg-[linear-gradient(135deg,#1d4ed8_0%,#0891b2_52%,#0f766e_100%)] px-4 py-16 transition-colors duration-300 dark:bg-[linear-gradient(135deg,#020617_0%,#0f172a_55%,#134e4a_100%)] sm:px-6 sm:py-20">
+      <div className="mx-auto max-w-3xl text-center">
+        <h2 className="mb-4 text-3xl font-extrabold text-white md:text-4xl">
+          Ready to Move In?
         </h2>
-        <p className="text-white/75 text-lg mb-8">
+        <p className="mb-8 text-base leading-7 text-white/75 sm:text-lg">
           Contact us today and book a free visit to see the rooms in person.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col justify-center gap-3 sm:flex-row">
           <Link
             to="/contact"
-            className="bg-white text-blue-700 px-8 py-3 rounded-full font-bold hover:bg-blue-50 transition shadow-lg"
+            className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-8 py-3 text-sm font-bold text-blue-700 shadow-lg transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             Book a Free Visit
           </Link>
           <Link
             to="/rooms"
-            className="bg-white/10 border-2 border-white/40 text-white px-8 py-3 rounded-full font-bold hover:bg-white/20 transition"
+            className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/40 bg-white/10 px-8 py-3 text-sm font-bold text-white transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             View Pricing
           </Link>

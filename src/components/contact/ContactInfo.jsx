@@ -11,8 +11,8 @@ const details = [
 
 function InfoCard({ icon, label, value }) {
   return (
-    <div className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-700 transition">
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-lg flex-shrink-0">
+    <div className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-200 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-blue-800">
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-lg">
         {icon}
       </div>
       <div>
@@ -29,7 +29,7 @@ function InfoCard({ icon, label, value }) {
 
 export default function ContactInfo() {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-5">
+    <div className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8">
       <div>
         <h2 className="text-2xl font-extrabold text-gray-800 dark:text-white mb-1">
           Get In Touch 👋
@@ -43,16 +43,16 @@ export default function ContactInfo() {
         <InfoCard key={d.label} {...d} />
       ))}
 
-      <div className="rounded-2xl overflow-hidden h-48 border border-gray-100 dark:border-gray-700">
+      <div className="h-56 overflow-hidden rounded-2xl border border-slate-200 dark:border-gray-800">
         <iframe
           title="Kothari PG Location"
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3492.8161278191487!2d75.61218137571744!3d28.903811571709497!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3913b16e66f7743d%3A0xa1475210c4988afa!2sKothari%20PG%20Hotel!5e0!3m2!1sen!2sin!4v1775973986536!5m2!1sen!2sin"
           width="100%"
           height="100%"
           style={{ border: 0 }}
-          allowfullscreen=""
+          allowFullScreen
           loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
+          referrerPolicy="no-referrer-when-downgrade"
         ></iframe>
       </div>
     </div>

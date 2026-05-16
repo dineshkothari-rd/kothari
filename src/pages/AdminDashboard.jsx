@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase/firebase";
+import { useEffect, useState } from "react";
 import AdminTabs from "../components/admin/AdminTabs";
 import OverviewTab from "../components/admin/OverviewTab";
 import TenantList from "../components/admin/TenantList";
@@ -9,29 +7,30 @@ import PaymentList from "../components/admin/PaymentList";
 import AddPaymentForm from "../components/admin/AddPaymentForm";
 import NoticeBoard from "../components/admin/NoticeBoard";
 import Button from "../components/common/Button";
+import { useFirestoreCollection } from "../hooks/useFirestoreCollection";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
-  const [tenants, setTenants] = useState([]);
   const [showAddTenant, setShowAddTenant] = useState(false);
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const { data: tenants } = useFirestoreCollection("tenants", {
+    sortBy: "createdAt",
+  });
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "tenants"), (snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setTenants(data);
-    });
-    return unsubscribe;
-  }, []);
+    if (!successMsg) return undefined;
+
+    const timeoutId = setTimeout(() => setSuccessMsg(""), 3000);
+    return () => clearTimeout(timeoutId);
+  }, [successMsg]);
 
   function showSuccess(msg) {
     setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3000);
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-950  transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950 transition-colors duration-300">
       {/* Modals */}
       {showAddTenant && (
         <AddTenantForm
@@ -54,7 +53,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
         {/* Success message */}
         {successMsg && (
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-xl text-sm font-medium">
@@ -70,7 +69,7 @@ export default function AdminDashboard() {
 
         {activeTab === "tenants" && (
           <div className="flex flex-col gap-4">
-            <div className="flex justify-end">
+            <div className="flex justify-start sm:justify-end">
               <Button variant="primary" onClick={() => setShowAddTenant(true)}>
                 + Add Tenant
               </Button>
@@ -81,7 +80,7 @@ export default function AdminDashboard() {
 
         {activeTab === "payments" && (
           <div className="flex flex-col gap-4">
-            <div className="flex justify-end">
+            <div className="flex justify-start sm:justify-end">
               <Button variant="primary" onClick={() => setShowAddPayment(true)}>
                 + Add Payment
               </Button>
