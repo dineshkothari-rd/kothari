@@ -1,4 +1,6 @@
 import SectionTitle from "../common/SectionTitle";
+import { cardHover, fadeUp, staggerContainer } from "../common/motionConfig";
+import { MotionDiv } from "../common/MotionPrimitives";
 
 const testimonials = [
   {
@@ -29,7 +31,11 @@ const colors = [
 
 function TestimonialCard({ name, role, text, avatar, colorIndex }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-md transition border border-gray-100 dark:border-gray-700 flex flex-col gap-4">
+    <MotionDiv
+      variants={fadeUp}
+      whileHover={cardHover}
+      className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
+    >
       <div className="flex items-center gap-3">
         <div
           className={`w-11 h-11 rounded-full bg-gradient-to-br ${colors[colorIndex]} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}
@@ -44,26 +50,32 @@ function TestimonialCard({ name, role, text, avatar, colorIndex }) {
         </div>
         <div className="ml-auto text-yellow-400 text-sm">★★★★★</div>
       </div>
-      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+      <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
         "{text}"
       </p>
-    </div>
+    </MotionDiv>
   );
 }
 
 export default function TestimonialsSection() {
   return (
-    <section className="py-20 px-4 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto">
+    <section className="bg-slate-50 px-4 py-16 transition-colors duration-300 dark:bg-gray-950 sm:px-6 sm:py-20">
+      <div className="mx-auto max-w-6xl">
         <SectionTitle
           title="What Our Tenants Say"
           subtitle="Real experiences from real people"
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <MotionDiv
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {testimonials.map((t, i) => (
             <TestimonialCard key={t.name} {...t} colorIndex={i} />
           ))}
-        </div>
+        </MotionDiv>
       </div>
     </section>
   );

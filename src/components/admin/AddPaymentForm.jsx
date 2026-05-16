@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   collection,
   addDoc,
@@ -49,7 +49,10 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
   const [error, setError] = useState("");
   const [previousBalance, setPreviousBalance] = useState(null);
 
-  const selectedTenant = tenants.find((t) => t.id === form.tenantId);
+  const selectedTenant = useMemo(
+    () => tenants.find((tenant) => tenant.id === form.tenantId),
+    [form.tenantId, tenants],
+  );
   const totalRent = selectedTenant?.rent || 0;
   const amountPaid = Number(form.amountPaid) || 0;
   const previousPaid =
@@ -78,7 +81,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
       "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
   };
 
-  async function fetchBalance(tenantId, month) {
+  const fetchBalance = useCallback(async (tenantId, month) => {
     if (!tenantId || !month) return;
 
     try {
@@ -116,7 +119,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     } catch (err) {
       console.error(err);
     }
-  }
+  }, [tenants]);
 
   function handleTenantChange(e) {
     const tenantId = e.target.value;
@@ -133,7 +136,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     if (form.tenantId && form.month) {
       fetchBalance(form.tenantId, form.month);
     }
-  }, [form.tenantId, form.month]);
+  }, [fetchBalance, form.tenantId, form.month]);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -216,9 +219,11 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     selectedTenant && (form.month || previousBalance !== null);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-8 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-8">
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-${showSummaryCard ? "4xl" : "lg"} flex flex-col gap-5`}
+        className={`flex w-full flex-col gap-5 rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-800 sm:p-6 ${
+          showSummaryCard ? "max-w-4xl" : "max-w-lg"
+        }`}
       >
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white">
@@ -237,8 +242,12 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
             {error}
           </div>
         )}
-        <div className={`grid grid-cols-${showSummaryCard ? "2" : "1"} gap-2`}>
-          <div>
+        <div
+          className={`grid gap-4 ${
+            showSummaryCard ? "lg:grid-cols-[minmax(0,1fr)_22rem]" : ""
+          }`}
+        >
+          <div className="flex min-w-0 flex-col gap-4">
             {/* Tenant Select */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
@@ -310,7 +319,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
             />
           </div>
           {showSummaryCard && (
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-4 mt-6 flex flex-col gap-3 border border-gray-100 dark:border-gray-700">
+            <div className="flex flex-col gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900 lg:mt-6">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                 Payment Summary
               </p>

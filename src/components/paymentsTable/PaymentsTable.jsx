@@ -8,10 +8,11 @@ const PaymentsTable = ({ payments, canDeletePayment, setDeletePayment }) => {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="overflow-x-auto">
+      <table className="w-full min-w-[760px] text-sm">
         <thead>
-          <tr className="border-b border-gray-100 dark:border-gray-700">
+          <tr className="border-b border-slate-200 bg-slate-50 dark:border-gray-800 dark:bg-gray-950">
             <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
               Tenant
             </th>
@@ -87,6 +88,7 @@ const PaymentsTable = ({ payments, canDeletePayment, setDeletePayment }) => {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 };

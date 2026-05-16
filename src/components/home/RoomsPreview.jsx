@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import SectionTitle from "../common/SectionTitle";
+import { cardHover, fadeUp, staggerContainer } from "../common/motionConfig";
+import { MotionDiv } from "../common/MotionPrimitives";
 
 const rooms = [
   {
@@ -30,11 +32,13 @@ const rooms = [
 
 function RoomCard({ type, price, features, emoji, tag, popular }) {
   return (
-    <div
-      className={`bg-white dark:bg-gray-800 rounded-2xl p-6 flex flex-col gap-4 transition-all duration-300 hover:shadow-xl border-2 ${
+    <MotionDiv
+      variants={fadeUp}
+      whileHover={cardHover}
+      className={`flex flex-col gap-4 rounded-2xl bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl dark:bg-gray-900 ${
         popular
-          ? "border-blue-500 shadow-blue-100 dark:shadow-blue-900/20 shadow-lg"
-          : "border-gray-100 dark:border-gray-700 shadow-sm"
+          ? "border-2 border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20"
+          : "border border-slate-200 shadow-sm hover:border-blue-200 dark:border-gray-800"
       }`}
     >
       {tag && (
@@ -85,23 +89,29 @@ function RoomCard({ type, price, features, emoji, tag, popular }) {
       >
         Book Now
       </Link>
-    </div>
+    </MotionDiv>
   );
 }
 
 export default function RoomsPreview() {
   return (
-    <section className="py-20 px-4 bg-white dark:bg-gray-900 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto">
+    <section className="bg-white px-4 py-16 transition-colors duration-300 dark:bg-gray-900 sm:px-6 sm:py-20">
+      <div className="mx-auto max-w-6xl">
         <SectionTitle
           title="Our Room Options"
           subtitle="Choose the plan that fits your budget and lifestyle"
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <MotionDiv
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {rooms.map((r) => (
             <RoomCard key={r.type} {...r} />
           ))}
-        </div>
+        </MotionDiv>
       </div>
     </section>
   );

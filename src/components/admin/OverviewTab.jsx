@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "../../firebase/firebase";
-import { calculateSummary } from "../../utils/helper";
+import {
+  calculateSummary,
+  calculateTenantDues,
+  getMonthKey,
+} from "../../utils/helper";
 import PaymentsTable from "../paymentsTable/PaymentsTable";
+import { useFirestoreCollection } from "../../hooks/useFirestoreCollection";
 
 const avatarColors = [
   "from-blue-500 to-cyan-500",
@@ -18,7 +20,7 @@ function getInitials(name) {
   return parts.length >= 2 ? parts[0][0] + parts[1][0] : parts[0][0];
 }
 
-function StatCard({ icon, label, value, color }) {
+function StatCard({ icon, label, value, hint, color }) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 flex items-center gap-4 hover:shadow-md transition">
       <div
@@ -33,35 +35,35 @@ function StatCard({ icon, label, value, color }) {
         <p className="text-2xl font-extrabold text-gray-800 dark:text-white mt-0.5">
           {value}
         </p>
+        {hint && <p className="mt-0.5 text-xs text-gray-400">{hint}</p>}
       </div>
     </div>
   );
 }
 
 export default function OverviewTab({ tenants }) {
-  const [payments, setPayments] = useState([]);
-  const [notices, setNotices] = useState([]);
+  const { data: payments } = useFirestoreCollection("payments", {
+    sortBy: "createdAt",
+  });
+  const { data: notices } = useFirestoreCollection("notices", {
+    sortBy: "createdAt",
+  });
 
-  useEffect(() => {
-    const unsubPayments = onSnapshot(collection(db, "payments"), (snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      data.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
-      setPayments(data);
-    });
-    const unsubNotices = onSnapshot(collection(db, "notices"), (snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      data.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
-      setNotices(data);
-    });
-    return () => {
-      unsubPayments();
-      unsubNotices();
-    };
-  }, []);
+  const currentMonth = getMonthKey();
+  const totalRevenue = tenants.reduce(
+    (sum, tenant) => sum + (Number(tenant.rent) || 0),
+    0,
+  );
+  const { pendingCount, pendingTenants } = calculateTenantDues(
+    tenants,
+    payments,
+    currentMonth,
+  );
+  const { normalized, totalBalance } = calculateSummary(payments, tenants);
 
-  const totalRevenue = tenants.reduce((sum, t) => sum + (t.rent || 0), 0);
-  const pendingCount = payments.filter((p) => p.status === "Pending").length;
-  const overdueCount = payments.filter((p) => p.status === "Overdue").length;
+  const overdueCount = normalized.filter(
+    (payment) => payment.status !== "Paid" && payment.month < currentMonth,
+  ).length;
 
   const stats = [
     {
@@ -80,6 +82,7 @@ export default function OverviewTab({ tenants }) {
       icon: "⏳",
       label: "Pending Payments",
       value: pendingCount,
+      hint: `₹${totalBalance} due`,
       color: "from-yellow-400 to-amber-500",
     },
     {
@@ -107,8 +110,6 @@ export default function OverviewTab({ tenants }) {
     danger: "🚨",
   };
 
-  const { normalized } = calculateSummary(payments);
-
   return (
     <div className="flex flex-col gap-6">
       {/* Stats */}
@@ -119,6 +120,46 @@ export default function OverviewTab({ tenants }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Current Month Dues */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+          <h3 className="text-base font-bold text-gray-800 dark:text-white mb-4">
+            Current Month Dues
+          </h3>
+          {pendingTenants.length === 0 ? (
+            <p className="text-gray-400 text-sm text-center py-6">
+              All active tenants are paid for {currentMonth}.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {pendingTenants.slice(0, 5).map((tenant) => (
+                <div
+                  key={tenant.id}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-900"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-gray-800 dark:text-white">
+                      {tenant.name}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {tenant.room || "No room"} • Paid ₹
+                      {tenant.paid.toLocaleString()} of ₹
+                      {tenant.rent.toLocaleString()}
+                    </p>
+                  </div>
+                  <p className="flex-shrink-0 text-sm font-extrabold text-red-500">
+                    ₹{tenant.balance.toLocaleString()}
+                  </p>
+                </div>
+              ))}
+              {pendingTenants.length > 5 && (
+                <p className="text-center text-xs font-semibold text-gray-400">
+                  +{pendingTenants.length - 5} more pending
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Recent Tenants */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
           <h3 className="text-base font-bold text-gray-800 dark:text-white mb-4">

@@ -1,4 +1,6 @@
 import SectionTitle from "../common/SectionTitle";
+import { cardHover, fadeUp, staggerContainer } from "../common/motionConfig";
+import { MotionDiv } from "../common/MotionPrimitives";
 
 const features = [
   {
@@ -45,33 +47,45 @@ const features = [
 
 function FeatureCard({ icon, title, desc, color }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-md transition group border border-gray-100 dark:border-gray-700">
+    <MotionDiv
+      variants={fadeUp}
+      whileHover={cardHover}
+      className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-800"
+    >
       <div
-        className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-300`}
+        className={`mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${color} text-3xl transition-transform duration-300 group-hover:scale-105`}
       >
         {icon}
       </div>
-      <h3 className="text-base font-bold text-gray-800 dark:text-white mb-1">
+      <h3 className="mb-1 text-base font-bold text-slate-900 dark:text-white">
         {title}
       </h3>
-      <p className="text-gray-500 dark:text-gray-400 text-sm">{desc}</p>
-    </div>
+      <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
+        {desc}
+      </p>
+    </MotionDiv>
   );
 }
 
 export default function FeaturesSection() {
   return (
-    <section className="py-20 px-4 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto">
+    <section className="bg-slate-50 px-4 py-16 transition-colors duration-300 dark:bg-gray-950 sm:px-6 sm:py-20">
+      <div className="mx-auto max-w-6xl">
         <SectionTitle
           title="Everything You Need"
           subtitle="We take care of everything so you can focus on what matters"
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <MotionDiv
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {features.map((f) => (
             <FeatureCard key={f.title} {...f} />
           ))}
-        </div>
+        </MotionDiv>
       </div>
     </section>
   );

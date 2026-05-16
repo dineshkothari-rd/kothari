@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
-import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore";
+import { useMemo, useState } from "react";
+import { doc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import EditTenantForm from "./EditTenantForm";
 import Button from "../common/Button";
+import { useFirestoreCollection } from "../../hooks/useFirestoreCollection";
 
 function ConfirmDelete({ name, onConfirm, onCancel }) {
   return (
@@ -32,37 +33,35 @@ function ConfirmDelete({ name, onConfirm, onCancel }) {
 }
 
 export default function TenantList() {
-  const [tenants, setTenants] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [editTenant, setEditTenant] = useState(null);
   const [deleteTenant, setDeleteTenant] = useState(null);
   const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "tenants"), (snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setTenants(data);
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
+  const { data: tenants, loading } = useFirestoreCollection("tenants", {
+    sortBy: "createdAt",
+  });
 
   async function handleDelete(id) {
     await deleteDoc(doc(db, "tenants", id));
     setDeleteTenant(null);
   }
 
-  const filtered = tenants.filter(
-    (t) =>
-      t.name?.toLowerCase().includes(search.toLowerCase()) ||
-      t.room?.toLowerCase().includes(search.toLowerCase()) ||
-      t.phone?.includes(search),
-  );
+  const filtered = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    if (!normalizedSearch) return tenants;
+
+    return tenants.filter(
+      (tenant) =>
+        tenant.name?.toLowerCase().includes(normalizedSearch) ||
+        tenant.room?.toLowerCase().includes(normalizedSearch) ||
+        tenant.phone?.includes(search.trim()),
+    );
+  }, [search, tenants]);
 
   if (loading) return <p className="text-gray-400">Loading tenants...</p>;
 
   return (
-    <div>
+    <div className="min-w-0">
       {editTenant && (
         <EditTenantForm
           tenant={editTenant}
@@ -79,7 +78,7 @@ export default function TenantList() {
         />
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+      <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white">
           👥 Tenant Records
         </h2>
@@ -88,16 +87,16 @@ export default function TenantList() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, room, phone..."
-          className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64"
+          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-800 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white sm:w-72"
         />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center text-gray-400">
+        <div className="rounded-2xl border border-gray-100 bg-white p-10 text-center text-gray-400 dark:border-gray-700 dark:bg-gray-800">
           {tenants.length === 0 ? "No tenants added yet." : "No results found."}
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

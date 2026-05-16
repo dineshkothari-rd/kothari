@@ -27,8 +27,9 @@ function Cell({ value }) {
 
 export default function PricingTable() {
   return (
-    <div className="overflow-x-auto rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-      <table className="w-full bg-white dark:bg-gray-800 text-sm">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="overflow-x-auto">
+      <table className="w-full min-w-[560px] text-sm">
         <thead>
           <tr className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
             <th className="text-left py-4 px-5 font-bold rounded-tl-2xl">
@@ -61,6 +62,7 @@ export default function PricingTable() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
