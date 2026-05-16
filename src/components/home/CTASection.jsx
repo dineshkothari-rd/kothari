@@ -1,16 +1,33 @@
 import { Link } from "react-router-dom";
+import { fadeUp, staggerContainer } from "../common/motionConfig";
+import { MotionDiv, MotionH2, MotionP } from "../common/MotionPrimitives";
 
 export default function CTASection() {
   return (
     <section className="bg-[linear-gradient(135deg,#1d4ed8_0%,#0891b2_52%,#0f766e_100%)] px-4 py-16 transition-colors duration-300 dark:bg-[linear-gradient(135deg,#020617_0%,#0f172a_55%,#134e4a_100%)] sm:px-6 sm:py-20">
-      <div className="mx-auto max-w-3xl text-center">
-        <h2 className="mb-4 text-3xl font-extrabold text-white md:text-4xl">
+      <MotionDiv
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        className="mx-auto max-w-3xl text-center"
+      >
+        <MotionH2
+          variants={fadeUp}
+          className="mb-4 text-3xl font-extrabold text-white md:text-4xl"
+        >
           Ready to Move In?
-        </h2>
-        <p className="mb-8 text-base leading-7 text-white/75 sm:text-lg">
+        </MotionH2>
+        <MotionP
+          variants={fadeUp}
+          className="mb-8 text-base leading-7 text-white/75 sm:text-lg"
+        >
           Contact us today and book a free visit to see the rooms in person.
-        </p>
-        <div className="flex flex-col justify-center gap-3 sm:flex-row">
+        </MotionP>
+        <MotionDiv
+          variants={fadeUp}
+          className="flex flex-col justify-center gap-3 sm:flex-row"
+        >
           <Link
             to="/contact"
             className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-8 py-3 text-sm font-bold text-blue-700 shadow-lg transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
@@ -23,8 +40,8 @@ export default function CTASection() {
           >
             View Pricing
           </Link>
-        </div>
-      </div>
+        </MotionDiv>
+      </MotionDiv>
     </section>
   );
 }

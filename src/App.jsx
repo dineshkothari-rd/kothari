@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
+import FloatingContact from "./components/layout/FloatingContact";
 import PrivateRoute from "./routes/PrivateRoute";
 
 const Home = lazy(() => import("./pages/Home"));
@@ -49,6 +50,7 @@ function App() {
                     />
                   </Routes>
                 </main>
+                <FloatingContact />
                 <Footer />
               </div>
             }

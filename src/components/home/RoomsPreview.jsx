@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import SectionTitle from "../common/SectionTitle";
+import { cardHover, fadeUp, staggerContainer } from "../common/motionConfig";
+import { MotionDiv } from "../common/MotionPrimitives";
 
 const rooms = [
   {
@@ -30,7 +32,9 @@ const rooms = [
 
 function RoomCard({ type, price, features, emoji, tag, popular }) {
   return (
-    <div
+    <MotionDiv
+      variants={fadeUp}
+      whileHover={cardHover}
       className={`flex flex-col gap-4 rounded-2xl bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl dark:bg-gray-900 ${
         popular
           ? "border-2 border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20"
@@ -85,7 +89,7 @@ function RoomCard({ type, price, features, emoji, tag, popular }) {
       >
         Book Now
       </Link>
-    </div>
+    </MotionDiv>
   );
 }
 
@@ -97,11 +101,17 @@ export default function RoomsPreview() {
           title="Our Room Options"
           subtitle="Choose the plan that fits your budget and lifestyle"
         />
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <MotionDiv
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {rooms.map((r) => (
             <RoomCard key={r.type} {...r} />
           ))}
-        </div>
+        </MotionDiv>
       </div>
     </section>
   );

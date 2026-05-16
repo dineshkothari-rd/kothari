@@ -1,4 +1,6 @@
 import SectionTitle from "../common/SectionTitle";
+import { cardHover, fadeUp, staggerContainer } from "../common/motionConfig";
+import { MotionDiv } from "../common/MotionPrimitives";
 
 const testimonials = [
   {
@@ -29,7 +31,11 @@ const colors = [
 
 function TestimonialCard({ name, role, text, avatar, colorIndex }) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900">
+    <MotionDiv
+      variants={fadeUp}
+      whileHover={cardHover}
+      className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
+    >
       <div className="flex items-center gap-3">
         <div
           className={`w-11 h-11 rounded-full bg-gradient-to-br ${colors[colorIndex]} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}
@@ -47,7 +53,7 @@ function TestimonialCard({ name, role, text, avatar, colorIndex }) {
       <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
         "{text}"
       </p>
-    </div>
+    </MotionDiv>
   );
 }
 
@@ -59,11 +65,17 @@ export default function TestimonialsSection() {
           title="What Our Tenants Say"
           subtitle="Real experiences from real people"
         />
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <MotionDiv
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {testimonials.map((t, i) => (
             <TestimonialCard key={t.name} {...t} colorIndex={i} />
           ))}
-        </div>
+        </MotionDiv>
       </div>
     </section>
   );

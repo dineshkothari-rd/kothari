@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { cardHover, fadeUp } from "../common/motionConfig";
+import { MotionDiv } from "../common/MotionPrimitives";
 
 export default function RoomCard({
   type,
@@ -9,7 +11,9 @@ export default function RoomCard({
   popular,
 }) {
   return (
-    <div
+    <MotionDiv
+      variants={fadeUp}
+      whileHover={cardHover}
       className={`flex h-full flex-col gap-4 rounded-2xl bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl dark:bg-gray-900 ${
         popular
           ? "border-2 border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20"
@@ -66,6 +70,6 @@ export default function RoomCard({
       >
         Book Now
       </Link>
-    </div>
+    </MotionDiv>
   );
 }

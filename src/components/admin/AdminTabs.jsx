@@ -2,6 +2,7 @@ const tabs = [
   { id: "overview", label: "Overview", icon: "📊" },
   { id: "tenants", label: "Tenants", icon: "👥" },
   { id: "payments", label: "Payments", icon: "💰" },
+  { id: "enquiries", label: "Enquiries", icon: "📨" },
   { id: "notices", label: "Notices", icon: "📋" },
 ];
 

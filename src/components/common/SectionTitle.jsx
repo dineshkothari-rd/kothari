@@ -1,6 +1,15 @@
+import { MotionDiv } from "./MotionPrimitives";
+import { fadeUp } from "./motionConfig";
+
 export default function SectionTitle({ title, subtitle }) {
   return (
-    <div className="mb-10 text-center sm:mb-12">
+    <MotionDiv
+      variants={fadeUp}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.35 }}
+      className="mb-10 text-center sm:mb-12"
+    >
       <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-4xl">
         {title}
       </h2>
@@ -9,6 +18,6 @@ export default function SectionTitle({ title, subtitle }) {
           {subtitle}
         </p>
       )}
-    </div>
+    </MotionDiv>
   );
 }

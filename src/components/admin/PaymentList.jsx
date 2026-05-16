@@ -136,7 +136,7 @@ export default function PaymentList({ tenants }) {
   );
 
   const { totalPaid, totalPartial, totalOverdue, totalBalance } =
-    calculateSummary(filtered);
+    calculateSummary(filtered, tenants);
 
   if (loading) return <p className="text-gray-400">Loading payments...</p>;
 

@@ -1,3 +1,6 @@
+import { fadeUp, staggerContainer } from "../common/motionConfig";
+import { MotionDiv } from "../common/MotionPrimitives";
+
 const details = [
   {
     icon: "📍",
@@ -11,7 +14,10 @@ const details = [
 
 function InfoCard({ icon, label, value }) {
   return (
-    <div className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-200 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-blue-800">
+    <MotionDiv
+      variants={fadeUp}
+      className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-200 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-blue-800"
+    >
       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-lg">
         {icon}
       </div>
@@ -23,13 +29,18 @@ function InfoCard({ icon, label, value }) {
           {value}
         </p>
       </div>
-    </div>
+    </MotionDiv>
   );
 }
 
 export default function ContactInfo() {
   return (
-    <div className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8">
+    <MotionDiv
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+      className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8"
+    >
       <div>
         <h2 className="text-2xl font-extrabold text-gray-800 dark:text-white mb-1">
           Get In Touch 👋
@@ -43,7 +54,10 @@ export default function ContactInfo() {
         <InfoCard key={d.label} {...d} />
       ))}
 
-      <div className="h-56 overflow-hidden rounded-2xl border border-slate-200 dark:border-gray-800">
+      <MotionDiv
+        variants={fadeUp}
+        className="h-56 overflow-hidden rounded-2xl border border-slate-200 dark:border-gray-800"
+      >
         <iframe
           title="Kothari PG Location"
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3492.8161278191487!2d75.61218137571744!3d28.903811571709497!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3913b16e66f7743d%3A0xa1475210c4988afa!2sKothari%20PG%20Hotel!5e0!3m2!1sen!2sin!4v1775973986536!5m2!1sen!2sin"
@@ -54,7 +68,7 @@ export default function ContactInfo() {
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
         ></iframe>
-      </div>
-    </div>
+      </MotionDiv>
+    </MotionDiv>
   );
 }

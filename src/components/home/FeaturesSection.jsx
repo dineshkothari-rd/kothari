@@ -1,4 +1,6 @@
 import SectionTitle from "../common/SectionTitle";
+import { cardHover, fadeUp, staggerContainer } from "../common/motionConfig";
+import { MotionDiv } from "../common/MotionPrimitives";
 
 const features = [
   {
@@ -45,7 +47,11 @@ const features = [
 
 function FeatureCard({ icon, title, desc, color }) {
   return (
-    <div className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-800">
+    <MotionDiv
+      variants={fadeUp}
+      whileHover={cardHover}
+      className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-800"
+    >
       <div
         className={`mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${color} text-3xl transition-transform duration-300 group-hover:scale-105`}
       >
@@ -57,7 +63,7 @@ function FeatureCard({ icon, title, desc, color }) {
       <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
         {desc}
       </p>
-    </div>
+    </MotionDiv>
   );
 }
 
@@ -69,11 +75,17 @@ export default function FeaturesSection() {
           title="Everything You Need"
           subtitle="We take care of everything so you can focus on what matters"
         />
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <MotionDiv
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {features.map((f) => (
             <FeatureCard key={f.title} {...f} />
           ))}
-        </div>
+        </MotionDiv>
       </div>
     </section>
   );

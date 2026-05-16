@@ -1,5 +1,10 @@
 import { useState } from "react";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { AnimatePresence } from "framer-motion";
+import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
+import { fadeUp } from "../common/motionConfig";
+import { MotionDiv, MotionForm } from "../common/MotionPrimitives";
 
 const initialState = {
   name: "",
@@ -76,25 +81,47 @@ function TextAreaField({ label, name, value, onChange, placeholder }) {
 export default function ContactForm() {
   const [form, setForm] = useState(initialState);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setError("");
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     if (!form.name || !form.phone || !form.email) {
-      alert("Please fill in all required fields");
+      setError("Please fill in all required fields");
       return;
     }
-    setSubmitted(true);
-    setForm(initialState);
+
+    setLoading(true);
+    try {
+      await addDoc(collection(db, "enquiries"), {
+        ...form,
+        status: "New",
+        createdAt: serverTimestamp(),
+      });
+      setSubmitted(true);
+      setForm(initialState);
+    } catch (submitError) {
+      setError("Could not send enquiry. Please try again.");
+      console.error(submitError);
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (submitted) {
     return (
-      <div className="flex min-h-full flex-col items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-10">
+      <MotionDiv
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        className="flex min-h-full flex-col items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-10"
+      >
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-4xl shadow-lg">
           🎉
         </div>
@@ -110,12 +137,15 @@ export default function ContactForm() {
         >
           Send Another
         </Button>
-      </div>
+      </MotionDiv>
     );
   }
 
   return (
-    <form
+    <MotionForm
+      variants={fadeUp}
+      initial="hidden"
+      animate="visible"
       onSubmit={handleSubmit}
       className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8"
     >
@@ -127,6 +157,19 @@ export default function ContactForm() {
           Fill in your details and we'll get back to you shortly.
         </p>
       </div>
+
+      <AnimatePresence>
+        {error && (
+          <MotionDiv
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"
+          >
+            {error}
+          </MotionDiv>
+        )}
+      </AnimatePresence>
 
       <InputField
         label="Full Name *"
@@ -165,9 +208,9 @@ export default function ContactForm() {
         placeholder="Any specific requirements or questions..."
       />
 
-      <Button type="submit" className="w-full">
-        Send Enquiry
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? "Sending..." : "Send Enquiry"}
       </Button>
-    </form>
+    </MotionForm>
   );
 }

@@ -1,6 +1,13 @@
+import { cardHover, fadeUp } from "../common/motionConfig";
+import { MotionArticle } from "../common/MotionPrimitives";
+
 export default function GalleryCard({ emoji, title, category }) {
   return (
-    <article className="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-800">
+    <MotionArticle
+      variants={fadeUp}
+      whileHover={cardHover}
+      className="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-blue-200 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-800"
+    >
       <div className="flex aspect-[4/3] items-center justify-center bg-[radial-gradient(circle_at_30%_20%,#dbeafe_0,#f8fafc_38%,#ccfbf1_100%)] text-6xl transition-transform duration-300 group-hover:scale-[1.02] dark:bg-[radial-gradient(circle_at_30%_20%,#1e3a8a_0,#111827_45%,#134e4a_100%)]">
         <span aria-hidden="true">{emoji}</span>
       </div>
@@ -12,6 +19,6 @@ export default function GalleryCard({ emoji, title, category }) {
           {category}
         </span>
       </div>
-    </article>
+    </MotionArticle>
   );
 }

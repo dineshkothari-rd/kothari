@@ -4,6 +4,8 @@ import RoomFilter from "../components/rooms/RoomFilter";
 import PricingTable from "../components/rooms/PricingTable";
 import SectionTitle from "../components/common/SectionTitle";
 import PageHeader from "../components/common/PageHeader";
+import { staggerContainer } from "../components/common/motionConfig";
+import { MotionDiv } from "../components/common/MotionPrimitives";
 
 const rooms = [
   {
@@ -75,11 +77,16 @@ export default function Rooms() {
       <section className="px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-6xl">
           <RoomFilter active={active} onChange={setActive} />
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <MotionDiv
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+          >
             {filtered.map((room) => (
               <RoomCard key={room.type} {...room} />
             ))}
-          </div>
+          </MotionDiv>
         </div>
       </section>
 
