@@ -119,20 +119,35 @@ export default function PaymentList({ tenants }) {
   const [balancePayment, setBalancePayment] = useState(null);
   const [filterTenant, setFilterTenant] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "payments"), (snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      data.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
-      setPayments(data);
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(
+      collection(db, "payments"),
+      (snap) => {
+        const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        data.sort(
+          (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
+        );
+        setPayments(data);
+        setError("");
+        setLoading(false);
+      },
+      (err) => {
+        setError("Unable to load payments: " + err.message);
+        setLoading(false);
+      },
+    );
     return unsubscribe;
   }, []);
 
   async function handleDelete(id) {
-    await deleteDoc(doc(db, "payments", id));
-    setDeletePayment(null);
+    try {
+      await deleteDoc(doc(db, "payments", id));
+      setDeletePayment(null);
+    } catch (err) {
+      setError("Unable to delete payment: " + err.message);
+    }
   }
 
   const filtered = payments.filter((p) => {
@@ -160,16 +175,16 @@ export default function PaymentList({ tenants }) {
           onClose={() => setBalancePayment(null)}
         />
       )}
-      <div className="flex items-center justify-between ">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-          💰 Payment Records
+      <div className="mb-4 flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+          Payment Records
         </h2>
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <select
             value={filterTenant}
             onChange={(e) => setFilterTenant(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="field-control sm:w-52"
           >
             <option value="">All Tenants</option>
             {tenants.map((t) => (
@@ -181,7 +196,7 @@ export default function PaymentList({ tenants }) {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="field-control sm:w-44"
           >
             <option value="">All Status</option>
             <option value="Paid">✅ Paid</option>
@@ -191,35 +206,40 @@ export default function PaymentList({ tenants }) {
           </select>
         </div>
       </div>
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl mb-4">
+          {error}
+        </div>
+      )}
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4">
-          <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
-            ✅ Fully Paid
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/40">
+          <p className="text-xs text-emerald-700 dark:text-emerald-300 font-bold uppercase tracking-wide">
+            Fully Paid
           </p>
-          <p className="text-xl font-extrabold text-green-700 dark:text-green-300 mt-1">
+          <p className="text-xl font-extrabold text-emerald-800 dark:text-emerald-200 mt-1">
             ₹{totalPaid.toLocaleString()}
           </p>
         </div>
-        <div className="bg-orange-50 dark:bg-orange-900/20 rounded-2xl p-4">
-          <p className="text-xs text-orange-600 dark:text-orange-400 font-semibold">
-            🔶 Partial Paid
+        <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-900/60 dark:bg-orange-950/40">
+          <p className="text-xs text-orange-700 dark:text-orange-300 font-bold uppercase tracking-wide">
+            Partial Paid
           </p>
           <p className="text-xl font-extrabold text-orange-700 dark:text-orange-300 mt-1">
             ₹{totalPartial.toLocaleString()}
           </p>
         </div>
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl p-4">
-          <p className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold">
-            ⏳ Pending
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/60 dark:bg-amber-950/40">
+          <p className="text-xs text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wide">
+            Pending
           </p>
           <p className="text-xl font-extrabold text-yellow-700 dark:text-yellow-300 mt-1">
             ₹{totalBalance.toLocaleString()}
           </p>
         </div>
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-4">
-          <p className="text-xs text-red-600 dark:text-red-400 font-semibold">
-            🚨 Overdue
+        <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/60 dark:bg-rose-950/40">
+          <p className="text-xs text-rose-700 dark:text-rose-300 font-bold uppercase tracking-wide">
+            Overdue
           </p>
           <p className="text-xl font-extrabold text-red-700 dark:text-red-300 mt-1">
             ₹{totalOverdue.toLocaleString()}

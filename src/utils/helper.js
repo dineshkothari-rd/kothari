@@ -14,7 +14,17 @@ const normalizePayments = (data) => {
     }
   });
 
-  return Object.values(map);
+  return Object.values(map).map((p) => {
+    const total = p.totalRent || 0;
+    const paid = p.amountPaid || 0;
+    const balance = Math.max(0, total - paid);
+
+    return {
+      ...p,
+      balance,
+      status: paid >= total ? "Paid" : paid > 0 ? "Partial" : p.status,
+    };
+  });
 };
 
 export const calculateSummary = (filtered) => {
@@ -38,7 +48,8 @@ export const calculateSummary = (filtered) => {
       totalPartial += paid;
       totalBalance += balance;
     } else {
-      if (p.paidOn && new Date(p.paidOn) < today) {
+      totalBalance += balance;
+      if (p.status === "Overdue" || (p.dueDate && new Date(p.dueDate) < today)) {
         totalOverdue += total;
       }
     }

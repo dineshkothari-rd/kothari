@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../firebase/firebase";
+import { auth } from "../firebase/firebase";
 import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
@@ -11,24 +10,10 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-
-      if (user) {
-        const adminRef = doc(db, "admins", user.email);
-        const adminSnap = await getDoc(adminRef);
-        if (adminSnap.exists()) {
-          setIsAdmin(true);
-          setAdminName(adminSnap.data().name || user.email);
-        } else {
-          setIsAdmin(false);
-          setAdminName("");
-        }
-      } else {
-        setIsAdmin(false);
-        setAdminName("");
-      }
-
+      setIsAdmin(Boolean(user));
+      setAdminName(user?.displayName || user?.email || "");
       setLoading(false);
     });
     return unsubscribe;

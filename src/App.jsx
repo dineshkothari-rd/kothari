@@ -20,7 +20,7 @@ function App() {
         <Route
           path="/*"
           element={
-            <div className="flex flex-col ">
+            <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
               <Navbar />
               <main className="grow min-h-screen">
                 <Routes>

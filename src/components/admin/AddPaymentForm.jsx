@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   collection,
   addDoc,
@@ -49,7 +49,10 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
   const [error, setError] = useState("");
   const [previousBalance, setPreviousBalance] = useState(null);
 
-  const selectedTenant = tenants.find((t) => t.id === form.tenantId);
+  const selectedTenant = useMemo(
+    () => tenants.find((t) => t.id === form.tenantId),
+    [form.tenantId, tenants],
+  );
   const totalRent = selectedTenant?.rent || 0;
   const amountPaid = Number(form.amountPaid) || 0;
   const previousPaid =
@@ -78,45 +81,48 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
       "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
   };
 
-  async function fetchBalance(tenantId, month) {
-    if (!tenantId || !month) return;
+  const fetchBalance = useCallback(
+    async (tenantId, month) => {
+      if (!tenantId || !month) return;
 
-    try {
-      const tenant = tenants.find((t) => t.id === tenantId);
-      const totalRent = tenant?.rent || 0;
+      try {
+        const tenant = tenants.find((t) => t.id === tenantId);
+        const totalRent = tenant?.rent || 0;
 
-      const q = query(
-        collection(db, "payments"),
-        where("tenantId", "==", tenantId),
-        where("month", "==", month),
-      );
+        const q = query(
+          collection(db, "payments"),
+          where("tenantId", "==", tenantId),
+          where("month", "==", month),
+        );
 
-      const snap = await getDocs(q);
+        const snap = await getDocs(q);
 
-      let totalPaid = 0;
+        let totalPaid = 0;
 
-      snap.forEach((doc) => {
-        totalPaid += doc.data().amountPaid || 0;
-      });
+        snap.forEach((doc) => {
+          totalPaid += doc.data().amountPaid || 0;
+        });
 
-      const balance = Math.max(0, totalRent - totalPaid);
+        const balance = Math.max(0, totalRent - totalPaid);
 
-      setPreviousBalance(balance);
+        setPreviousBalance(balance);
 
-      setForm((prev) => ({
-        ...prev,
-        amountPaid: balance > 0 ? balance.toString() : "",
-      }));
+        setForm((prev) => ({
+          ...prev,
+          amountPaid: balance > 0 ? balance.toString() : "",
+        }));
 
-      if (balance <= 0) {
-        setError("This month's rent is already fully paid");
-      } else {
-        setError("");
+        if (balance <= 0) {
+          setError("This month's rent is already fully paid");
+        } else {
+          setError("");
+        }
+      } catch (err) {
+        setError("Unable to calculate balance: " + err.message);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  }
+    },
+    [tenants],
+  );
 
   function handleTenantChange(e) {
     const tenantId = e.target.value;
@@ -124,6 +130,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     setForm((prev) => ({
       ...prev,
       tenantId,
+      amountPaid: "",
     }));
 
     setPreviousBalance(null);
@@ -133,7 +140,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     if (form.tenantId && form.month) {
       fetchBalance(form.tenantId, form.month);
     }
-  }, [form.tenantId, form.month]);
+  }, [fetchBalance, form.tenantId, form.month]);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -149,6 +156,11 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     const tenant = tenants.find((t) => t.id === form.tenantId);
     const totalRent = tenant?.rent || 0;
     const amountPaid = Number(form.amountPaid) || 0;
+
+    if (!tenant || totalRent <= 0) {
+      setError("Select a tenant with a valid monthly rent");
+      return;
+    }
 
     if (amountPaid <= 0) {
       setError("Enter valid amount");
@@ -214,11 +226,17 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
 
   const showSummaryCard =
     selectedTenant && (form.month || previousBalance !== null);
+  const progressPercent =
+    totalRent > 0
+      ? Math.min(100, Math.round((totalPaidTillNow / totalRent) * 100))
+      : 0;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-8 overflow-y-auto">
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-${showSummaryCard ? "4xl" : "lg"} flex flex-col gap-5`}
+        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 w-full flex flex-col gap-5 ${
+          showSummaryCard ? "max-w-4xl" : "max-w-lg"
+        }`}
       >
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white">
@@ -237,7 +255,11 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
             {error}
           </div>
         )}
-        <div className={`grid grid-cols-${showSummaryCard ? "2" : "1"} gap-2`}>
+        <div
+          className={`grid gap-4 ${
+            showSummaryCard ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"
+          }`}
+        >
           <div>
             {/* Tenant Select */}
             <div className="flex flex-col gap-1.5">
@@ -383,16 +405,12 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
                         : "bg-gray-300"
                   }`}
                   style={{
-                    width: `${Math.min(100, Math.round((totalPaidTillNow / totalRent) * 100))}%`,
+                    width: `${progressPercent}%`,
                   }}
                 />
               </div>
               <p className="text-xs text-gray-400 text-right">
-                {Math.min(
-                  100,
-                  Math.round((totalPaidTillNow / totalRent) * 100),
-                ) || 0}
-                % paid
+                {progressPercent}% paid
               </p>
             </div>
           )}

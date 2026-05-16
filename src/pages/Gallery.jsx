@@ -26,14 +26,18 @@ export default function Gallery() {
       : galleryItems.filter((item) => item.category === active);
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-950 min-h-screen transition-colors duration-300">
+    <div className="bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-300">
       {/* Header */}
-      <div className="relative bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-500 dark:from-gray-900 dark:via-blue-950 dark:to-gray-900 text-white py-20 px-4 text-center overflow-hidden">
-        <div className="absolute top-[-40px] right-[-40px] w-64 h-64 bg-white/5 rounded-full" />
-        <div className="absolute bottom-[-50px] left-[-30px] w-72 h-72 bg-white/5 rounded-full" />
-        <div className="relative">
+      <div className="relative overflow-hidden bg-slate-950 text-white">
+        <img
+          src="/images/pg-hero.png"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-35"
+        />
+        <div className="absolute inset-0 bg-slate-950/70" />
+        <div className="container-shell relative py-16 text-center sm:py-20">
           <div className="inline-flex items-center gap-2 bg-white/15 border border-white/20 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
-            🖼️ Photo Gallery
+            Photo Gallery
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold mb-3 tracking-tight">
             Photo Gallery
@@ -45,8 +49,8 @@ export default function Gallery() {
       </div>
 
       {/* Gallery */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-12 sm:py-16">
+        <div className="container-shell">
           <GalleryFilter active={active} onChange={setActive} />
           <GalleryGrid items={filtered} />
         </div>

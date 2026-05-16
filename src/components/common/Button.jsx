@@ -6,14 +6,14 @@ export default function Button({
   disabled = false,
 }) {
   const base =
-    "px-6 py-2.5 rounded-full font-semibold transition duration-300 ";
+    "inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ";
 
   const variants = {
     primary:
-      "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600",
+      "bg-teal-700 text-white hover:bg-teal-800 dark:bg-teal-500 dark:text-slate-950 dark:hover:bg-teal-400",
     outline:
-      "border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400",
-    white: "bg-white text-blue-600 hover:bg-blue-50",
+      "border border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800",
+    white: "bg-white text-slate-950 hover:bg-slate-100",
   };
 
   return (

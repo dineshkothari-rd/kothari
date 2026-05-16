@@ -233,19 +233,34 @@ export default function NoticeBoard() {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "notices"), (snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      data.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
-      setNotices(data);
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(
+      collection(db, "notices"),
+      (snap) => {
+        const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        data.sort(
+          (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
+        );
+        setNotices(data);
+        setError("");
+        setLoading(false);
+      },
+      (err) => {
+        setError("Unable to load notices: " + err.message);
+        setLoading(false);
+      },
+    );
     return unsubscribe;
   }, []);
 
   async function handleDelete(id) {
-    await deleteDoc(doc(db, "notices", id));
+    try {
+      await deleteDoc(doc(db, "notices", id));
+    } catch (err) {
+      setError("Unable to delete notice: " + err.message);
+    }
   }
 
   if (loading) return <p className="text-gray-400">Loading notices...</p>;
@@ -262,6 +277,12 @@ export default function NoticeBoard() {
           + Add Notice
         </Button>
       </div>
+
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl mb-4">
+          {error}
+        </div>
+      )}
 
       {notices.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center text-gray-400">

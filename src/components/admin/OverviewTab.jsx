@@ -41,18 +41,33 @@ function StatCard({ icon, label, value, color }) {
 export default function OverviewTab({ tenants }) {
   const [payments, setPayments] = useState([]);
   const [notices, setNotices] = useState([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const unsubPayments = onSnapshot(collection(db, "payments"), (snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      data.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
-      setPayments(data);
-    });
-    const unsubNotices = onSnapshot(collection(db, "notices"), (snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      data.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
-      setNotices(data);
-    });
+    const unsubPayments = onSnapshot(
+      collection(db, "payments"),
+      (snap) => {
+        const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        data.sort(
+          (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
+        );
+        setPayments(data);
+        setError("");
+      },
+      (err) => setError("Unable to load overview payments: " + err.message),
+    );
+    const unsubNotices = onSnapshot(
+      collection(db, "notices"),
+      (snap) => {
+        const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        data.sort(
+          (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
+        );
+        setNotices(data);
+        setError("");
+      },
+      (err) => setError("Unable to load overview notices: " + err.message),
+    );
     return () => {
       unsubPayments();
       unsubNotices();
@@ -111,6 +126,12 @@ export default function OverviewTab({ tenants }) {
 
   return (
     <div className="flex flex-col gap-6">
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl">
+          {error}
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((s) => (
