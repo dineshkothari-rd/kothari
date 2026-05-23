@@ -30,7 +30,7 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
+        className="px-4 py-2.5 rounded-xl border text-white border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm scheme-dark"
       />
       {hint && <p className="text-xs text-gray-400">{hint}</p>}
     </div>
@@ -81,45 +81,48 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
       "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
   };
 
-  const fetchBalance = useCallback(async (tenantId, month) => {
-    if (!tenantId || !month) return;
+  const fetchBalance = useCallback(
+    async (tenantId, month) => {
+      if (!tenantId || !month) return;
 
-    try {
-      const tenant = tenants.find((t) => t.id === tenantId);
-      const totalRent = tenant?.rent || 0;
+      try {
+        const tenant = tenants.find((t) => t.id === tenantId);
+        const totalRent = tenant?.rent || 0;
 
-      const q = query(
-        collection(db, "payments"),
-        where("tenantId", "==", tenantId),
-        where("month", "==", month),
-      );
+        const q = query(
+          collection(db, "payments"),
+          where("tenantId", "==", tenantId),
+          where("month", "==", month),
+        );
 
-      const snap = await getDocs(q);
+        const snap = await getDocs(q);
 
-      let totalPaid = 0;
+        let totalPaid = 0;
 
-      snap.forEach((doc) => {
-        totalPaid += doc.data().amountPaid || 0;
-      });
+        snap.forEach((doc) => {
+          totalPaid += doc.data().amountPaid || 0;
+        });
 
-      const balance = Math.max(0, totalRent - totalPaid);
+        const balance = Math.max(0, totalRent - totalPaid);
 
-      setPreviousBalance(balance);
+        setPreviousBalance(balance);
 
-      setForm((prev) => ({
-        ...prev,
-        amountPaid: balance > 0 ? balance.toString() : "",
-      }));
+        setForm((prev) => ({
+          ...prev,
+          amountPaid: balance > 0 ? balance.toString() : "",
+        }));
 
-      if (balance <= 0) {
-        setError("This month's rent is already fully paid");
-      } else {
-        setError("");
+        if (balance <= 0) {
+          setError("This month's rent is already fully paid");
+        } else {
+          setError("");
+        }
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  }, [tenants]);
+    },
+    [tenants],
+  );
 
   function handleTenantChange(e) {
     const tenantId = e.target.value;

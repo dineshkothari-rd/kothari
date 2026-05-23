@@ -18,6 +18,7 @@ const initialForm = {
   email: "",
   room: "",
   rent: "",
+  moveOutDate: "",
   moveInDate: "",
   services: [],
 };
@@ -41,7 +42,7 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+        className="px-4 py-2.5 rounded-xl border text-white border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm scheme-dark"
       />
     </div>
   );
@@ -80,6 +81,7 @@ export default function AddTenantForm({ onClose, onSuccess }) {
         room: form.room,
         rent: Number(form.rent),
         moveInDate: form.moveInDate,
+        moveOutDate: form.moveOutDate,
         services: form.services,
         status: "active",
         createdAt: serverTimestamp(),
@@ -167,6 +169,13 @@ export default function AddTenantForm({ onClose, onSuccess }) {
             name="moveInDate"
             type="date"
             value={form.moveInDate}
+            onChange={handleChange}
+          />
+          <InputField
+            label="Move Out Date"
+            name="moveOutDate"
+            type="date"
+            value={form.moveOutDate}
             onChange={handleChange}
           />
         </div>

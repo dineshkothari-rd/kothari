@@ -98,7 +98,7 @@ export default function TenantList() {
       ) : (
         <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead>
                 <tr className="bg-blue-600 text-white">
                   <th className="text-left py-3 px-4">Name</th>
@@ -106,6 +106,7 @@ export default function TenantList() {
                   <th className="text-left py-3 px-4">Room</th>
                   <th className="text-left py-3 px-4">Rent</th>
                   <th className="text-left py-3 px-4">Move In</th>
+                  <th className="text-left py-3 px-4">Move Out</th>
                   <th className="text-left py-3 px-4">Services</th>
                   <th className="text-left py-3 px-4">Actions</th>
                 </tr>
@@ -134,6 +135,9 @@ export default function TenantList() {
                     </td>
                     <td className="py-3 px-4 text-gray-500 dark:text-gray-400">
                       {t.moveInDate || "—"}
+                    </td>
+                    <td className="py-3 px-4 text-gray-500 shrink-0 dark:text-gray-400">
+                      {t.moveOutDate || "—"}
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex flex-wrap gap-1">
