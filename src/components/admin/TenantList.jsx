@@ -33,7 +33,7 @@ function ConfirmDelete({ name, onConfirm, onCancel }) {
   );
 }
 
-export default function TenantList() {
+export default function TenantList({ roomRecords = [] }) {
   const [editTenant, setEditTenant] = useState(null);
   const [deleteTenant, setDeleteTenant] = useState(null);
   const [search, setSearch] = useState("");
@@ -71,7 +71,7 @@ export default function TenantList() {
       {editTenant && (
         <EditTenantForm
           tenant={editTenant}
-          tenants={tenants}
+          tenants={roomRecords.length ? roomRecords : tenants}
           onClose={() => setEditTenant(null)}
           onSuccess={() => setEditTenant(null)}
         />

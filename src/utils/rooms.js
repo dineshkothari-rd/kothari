@@ -51,7 +51,9 @@ export function parseRoomLabel(value = "") {
 export function isRoomCustomer(customer) {
   const businessType = customer.businessType || "pg";
   if (!["pg", "hotel"].includes(businessType)) return false;
-  if (customer.status && customer.status !== "active") return false;
+  const status = String(customer.status || "active").toLowerCase();
+  const activeStatuses = ["active", "booked", "checked in", "occupied"];
+  if (!activeStatuses.includes(status)) return false;
 
   if (customer.moveOutDate) {
     const moveOut = new Date(customer.moveOutDate);
