@@ -25,6 +25,18 @@ export default function AdminDashboard() {
   const { data: tenants } = useFirestoreCollection("tenants", {
     sortBy: "createdAt",
   });
+  const { data: hotelBookings } = useFirestoreCollection("hotelBookings", {
+    sortBy: "createdAt",
+  });
+  const roomRecords = [
+    ...tenants,
+    ...hotelBookings.map((booking) => ({
+      ...booking,
+      businessType: "hotel",
+      name: booking.guestName,
+      status: booking.status || "Booked",
+    })),
+  ];
 
   useEffect(() => {
     if (!successMsg) return undefined;
@@ -43,6 +55,7 @@ export default function AdminDashboard() {
       {showAddTenant && (
         <AddTenantForm
           tenants={tenants}
+          roomRecords={roomRecords}
           onClose={() => setShowAddTenant(false)}
           onSuccess={() => {
             showSuccess("Customer added successfully!");
@@ -118,7 +131,7 @@ export default function AdminDashboard() {
                 + Add Customer
               </Button>
             </div>
-            <TenantList />
+            <TenantList roomRecords={roomRecords} />
           </div>
         )}
 

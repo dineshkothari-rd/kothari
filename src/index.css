@@ -4,6 +4,8 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    color-scheme: light;
+    forced-color-adjust: none;
   }
 
   body {
@@ -12,10 +14,29 @@
     color: #0f172a;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    forced-color-adjust: none;
   }
 
   .dark body {
     background: #030712;
+  }
+
+  #root,
+  #root * {
+    forced-color-adjust: none;
+  }
+
+  @media (forced-colors: active) {
+    html,
+    body {
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .dark body {
+      background: #030712;
+      color: #f8fafc;
+    }
   }
 }
 

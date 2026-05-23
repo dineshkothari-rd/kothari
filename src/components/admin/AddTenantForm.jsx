@@ -43,7 +43,12 @@ function InputField({
   );
 }
 
-export default function AddTenantForm({ tenants = [], onClose, onSuccess }) {
+export default function AddTenantForm({
+  tenants = [],
+  roomRecords = tenants,
+  onClose,
+  onSuccess,
+}) {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -52,7 +57,7 @@ export default function AddTenantForm({ tenants = [], onClose, onSuccess }) {
   const [idBase64, setIdBase64] = useState(null);
   const activeType = getBusinessType(form.businessType);
   const usesRoomDropdown = ["pg", "hotel"].includes(form.businessType);
-  const roomOptions = getAvailableRoomOptions(tenants, form.roomType);
+  const roomOptions = getAvailableRoomOptions(roomRecords, form.roomType);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
