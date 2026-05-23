@@ -8,7 +8,7 @@ const details = [
     value: "Siwani mandi, Bhiwani, Haryana 127046",
   },
   { icon: "📞", label: "Phone", value: "+91 9812416720" },
-  { icon: "✉️", label: "Email", value: "kotharipg@gmail.com" },
+  { icon: "✉️", label: "Email", value: "pghotel6@gmail.com" },
   { icon: "🕐", label: "Visit Hours", value: "Mon - Sat, 10am to 7pm" },
 ];
 

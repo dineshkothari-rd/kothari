@@ -2,15 +2,8 @@ import { useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
-
-const allServices = [
-  "WiFi",
-  "Meals",
-  "Laundry",
-  "Parking",
-  "AC",
-  "Power Backup",
-];
+import { businessTypeOptions, getBusinessType } from "../../utils/businessTypes";
+import { getAvailableRoomOptions } from "../../utils/rooms";
 
 function InputField({
   label,
@@ -37,11 +30,18 @@ function InputField({
   );
 }
 
-export default function EditTenantForm({ tenant, onClose, onSuccess }) {
+export default function EditTenantForm({
+  tenant,
+  tenants = [],
+  onClose,
+  onSuccess,
+}) {
   const [form, setForm] = useState({
+    businessType: tenant.businessType || "pg",
     name: tenant.name || "",
     phone: tenant.phone || "",
     email: tenant.email || "",
+    roomType: tenant.roomType || "single",
     room: tenant.room || "",
     rent: tenant.rent || "",
     moveInDate: tenant.moveInDate || "",
@@ -59,6 +59,13 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
     tenant.idProofName || null,
   );
   const [idProofType, setIdProofType] = useState(tenant.idProofType || null);
+  const activeType = getBusinessType(form.businessType);
+  const usesRoomDropdown = ["pg", "hotel"].includes(form.businessType);
+  const roomOptions = getAvailableRoomOptions(
+    tenants,
+    form.roomType,
+    tenant.id,
+  );
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -133,15 +140,17 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
 
   async function handleUpdate() {
     if (!form.name || !form.phone || !form.room || !form.rent) {
-      setError("Name, phone, room and rent are required");
+      setError(`Name, phone, ${activeType.unitLabel.toLowerCase()} and amount are required`);
       return;
     }
     setLoading(true);
     try {
       await updateDoc(doc(db, "tenants", tenant.id), {
+        businessType: form.businessType,
         name: form.name,
         phone: form.phone,
         email: form.email,
+        roomType: form.roomType,
         room: form.room,
         rent: Number(form.rent),
         moveInDate: form.moveInDate,
@@ -165,7 +174,7 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg flex flex-col gap-5 my-auto">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-            ✏️ Edit Tenant
+            Edit Customer
           </h2>
           <button
             onClick={onClose}
@@ -183,7 +192,37 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
 
         {/* Personal Details */}
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          Personal Details
+          Business Type
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {businessTypeOptions.map((type) => (
+            <button
+              key={type.id}
+              type="button"
+              onClick={() =>
+                setForm((prev) => ({
+                  ...prev,
+                  businessType: type.id,
+                  room: "",
+                  roomType: "single",
+                  services: prev.services.filter((service) =>
+                    type.services.includes(service),
+                  ),
+                }))
+              }
+              className={`min-h-11 rounded-xl border px-3 text-sm font-bold transition ${
+                form.businessType === type.id
+                  ? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-950"
+                  : "border-gray-200 bg-gray-50 text-gray-600 hover:border-blue-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+              }`}
+            >
+              {type.label}
+            </button>
+          ))}
+        </div>
+
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          {activeType.customerLabel} Details
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InputField
@@ -211,20 +250,67 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
           />
         </div>
 
-        {/* Room Details */}
+        {/* Stay or Membership Details */}
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          Room Details
+          {activeType.label} Details
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {usesRoomDropdown ? (
+            <>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Room Type *
+                </label>
+                <select
+                  name="roomType"
+                  value={form.roomType}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      roomType: event.target.value,
+                      room: "",
+                    })
+                  }
+                  className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+                >
+                  <option value="single">Single Bed</option>
+                  <option value="double">Double Room</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Room *
+                </label>
+                <select
+                  name="room"
+                  value={form.room}
+                  onChange={handleChange}
+                  className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+                >
+                  <option value="">Select room</option>
+                  {roomOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                  {form.room &&
+                    !roomOptions.some((option) => option.value === form.room) && (
+                      <option value={form.room}>{form.room} (current)</option>
+                    )}
+                </select>
+              </div>
+            </>
+          ) : (
+            <InputField
+              label={`${activeType.unitLabel} *`}
+              name="room"
+              value={form.room}
+              onChange={handleChange}
+              placeholder="Seat A12"
+            />
+          )}
           <InputField
-            label="Room *"
-            name="room"
-            value={form.room}
-            onChange={handleChange}
-            placeholder="101 - Single"
-          />
-          <InputField
-            label="Monthly Rent (₹) *"
+            label={`${activeType.feeLabel} (₹) *`}
             name="rent"
             type="number"
             value={form.rent}
@@ -232,14 +318,14 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
             placeholder="8000"
           />
           <InputField
-            label="Move In Date"
+            label={activeType.dateInLabel}
             name="moveInDate"
             type="date"
             value={form.moveInDate}
             onChange={handleChange}
           />
           <InputField
-            label="Move Out Date"
+            label={activeType.dateOutLabel}
             name="moveOutDate"
             type="date"
             value={form.moveOutDate}
@@ -351,7 +437,7 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
           Services Included
         </p>
         <div className="flex flex-wrap gap-2">
-          {allServices.map((service) => (
+          {activeType.services.map((service) => (
             <button
               key={service}
               type="button"

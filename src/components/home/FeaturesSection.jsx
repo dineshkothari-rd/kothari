@@ -5,41 +5,41 @@ import { MotionDiv } from "../common/MotionPrimitives";
 const features = [
   {
     icon: "📶",
-    title: "High Speed WiFi",
-    desc: "Uninterrupted internet for work and studies",
+    title: "Unified Customers",
+    desc: "Handle hotel guests, PG tenants and library members together",
     color: "from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20",
   },
   {
     icon: "🍽️",
-    title: "Meals Included",
-    desc: "Healthy home-cooked breakfast and dinner",
+    title: "Flexible Charges",
+    desc: "Track rent, stay charges and membership fees with balances",
     color:
       "from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20",
   },
   {
     icon: "❄️",
-    title: "AC Rooms",
-    desc: "Stay cool and comfortable all year round",
+    title: "Receipt Sharing",
+    desc: "Download or share payment receipts directly from records",
     color: "from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20",
   },
   {
     icon: "🔒",
-    title: "CCTV Security",
-    desc: "24/7 surveillance for your safety",
+    title: "ID Records",
+    desc: "Store customer details and ID proof in the same workflow",
     color:
       "from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20",
   },
   {
     icon: "🔋",
-    title: "Power Backup",
-    desc: "No interruptions even during power cuts",
+    title: "Due Tracking",
+    desc: "See paid, partial, pending and overdue amounts clearly",
     color:
       "from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20",
   },
   {
     icon: "🚗",
-    title: "Parking",
-    desc: "Safe parking for bikes and cars",
+    title: "Operational Tools",
+    desc: "Manage notices, enquiries and meter readings when needed",
     color:
       "from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20",
   },
@@ -73,7 +73,7 @@ export default function FeaturesSection() {
       <div className="mx-auto max-w-6xl">
         <SectionTitle
           title="Everything You Need"
-          subtitle="We take care of everything so you can focus on what matters"
+          subtitle="A clean dashboard for daily hospitality and workspace operations"
         />
         <MotionDiv
           variants={staggerContainer}

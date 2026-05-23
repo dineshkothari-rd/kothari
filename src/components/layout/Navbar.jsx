@@ -76,7 +76,7 @@ export default function Navbar() {
             🏠
           </div>
           <span className="text-lg font-extrabold tracking-tight sm:text-xl">
-            Kothari PG
+            Kothari Spaces
           </span>
         </Link>
 

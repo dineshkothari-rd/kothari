@@ -1,3 +1,6 @@
+import { getBusinessType } from "../../utils/businessTypes";
+import { downloadReceipt, shareReceipt } from "../../utils/receipts";
+
 const PaymentsTable = ({ payments, canDeletePayment, setDeletePayment }) => {
   if (!payments || payments.length === 0) {
     return (
@@ -10,14 +13,17 @@ const PaymentsTable = ({ payments, canDeletePayment, setDeletePayment }) => {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
       <div className="overflow-x-auto">
-      <table className="w-full min-w-[760px] text-sm">
-        <thead>
-          <tr className="border-b border-slate-200 bg-slate-50 dark:border-gray-800 dark:bg-gray-950">
-            <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Tenant
+        <table className="w-full min-w-[920px] text-sm">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50 dark:border-gray-800 dark:bg-gray-950">
+              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+              Customer
             </th>
             <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Room
+              Type
+            </th>
+            <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+              Unit
             </th>
             <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
               Month
@@ -26,7 +32,7 @@ const PaymentsTable = ({ payments, canDeletePayment, setDeletePayment }) => {
               Paid On
             </th>
             <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Total Rent
+              Charge
             </th>
             <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
               Paid
@@ -34,24 +40,34 @@ const PaymentsTable = ({ payments, canDeletePayment, setDeletePayment }) => {
             <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
               Balance
             </th>
+            <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+              Receipt
+            </th>
             {canDeletePayment && (
               <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
                 Action
               </th>
             )}
           </tr>
-        </thead>
-        <tbody>
-          {payments.map((p) => (
-            <tr
-              key={p.id}
-              className="border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition"
-            >
+          </thead>
+          <tbody>
+          {payments.map((p) => {
+            const type = getBusinessType(p.businessType);
+            return (
+              <tr
+                key={p.id}
+                className="border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition"
+              >
               <td className="py-2.5 px-3 font-medium text-gray-800 dark:text-white">
                 {p.tenantName}
               </td>
+              <td className="py-2.5 px-3">
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-slate-200">
+                  {type.label}
+                </span>
+              </td>
               <td className="py-2.5 px-3 font-medium text-gray-800 dark:text-white">
-                {p.tenantRoom}
+                {type.unitLabel} {p.tenantRoom || "-"}
               </td>
               <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
                 {p.month}
@@ -74,6 +90,24 @@ const PaymentsTable = ({ payments, canDeletePayment, setDeletePayment }) => {
                   ₹{p.balance?.toLocaleString()}
                 </p>
               </td>
+              <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => downloadReceipt(p)}
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-bold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-gray-700 dark:text-slate-200"
+                  >
+                    Download
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => shareReceipt(p)}
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-bold text-slate-700 transition hover:border-green-400 hover:text-green-600 dark:border-gray-700 dark:text-slate-200"
+                  >
+                    Share
+                  </button>
+                </div>
+              </td>
               {canDeletePayment && (
                 <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
                   <button
@@ -85,9 +119,10 @@ const PaymentsTable = ({ payments, canDeletePayment, setDeletePayment }) => {
                 </td>
               )}
             </tr>
-          ))}
-        </tbody>
-      </table>
+            );
+          })}
+          </tbody>
+        </table>
       </div>
     </div>
   );

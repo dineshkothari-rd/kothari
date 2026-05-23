@@ -9,6 +9,15 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
+import { getBusinessType } from "../../utils/businessTypes";
+
+function getPaymentTenantId(payment) {
+  return payment.tenantId || payment.userId || "";
+}
+
+function getPaymentAmount(payment) {
+  return Number(payment.amountPaid ?? payment.amount ?? 0) || 0;
+}
 
 function InputField({
   label,
@@ -53,6 +62,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     () => tenants.find((tenant) => tenant.id === form.tenantId),
     [form.tenantId, tenants],
   );
+  const activeType = getBusinessType(selectedTenant?.businessType);
   const totalRent = selectedTenant?.rent || 0;
   const amountPaid = Number(form.amountPaid) || 0;
   const previousPaid =
@@ -89,18 +99,36 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
         const tenant = tenants.find((t) => t.id === tenantId);
         const totalRent = tenant?.rent || 0;
 
-        const q = query(
+        const modernQuery = query(
           collection(db, "payments"),
           where("tenantId", "==", tenantId),
           where("month", "==", month),
         );
+        const legacyQuery = query(
+          collection(db, "payments"),
+          where("userId", "==", tenantId),
+          where("month", "==", month),
+        );
 
-        const snap = await getDocs(q);
+        const [modernSnap, legacySnap] = await Promise.all([
+          getDocs(modernQuery),
+          getDocs(legacyQuery),
+        ]);
+        const records = new Map();
+
+        modernSnap.forEach((document) => {
+          records.set(document.id, document.data());
+        });
+        legacySnap.forEach((document) => {
+          records.set(document.id, document.data());
+        });
 
         let totalPaid = 0;
 
-        snap.forEach((doc) => {
-          totalPaid += doc.data().amountPaid || 0;
+        records.forEach((payment) => {
+          if (getPaymentTenantId(payment) === tenantId) {
+            totalPaid += getPaymentAmount(payment);
+          }
         });
 
         const balance = Math.max(0, totalRent - totalPaid);
@@ -130,6 +158,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     setForm((prev) => ({
       ...prev,
       tenantId,
+      amountPaid: "",
     }));
 
     setPreviousBalance(null);
@@ -163,18 +192,36 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
 
     setLoading(true);
     try {
-      const q = query(
+      const modernQuery = query(
         collection(db, "payments"),
         where("tenantId", "==", form.tenantId),
         where("month", "==", form.month),
       );
+      const legacyQuery = query(
+        collection(db, "payments"),
+        where("userId", "==", form.tenantId),
+        where("month", "==", form.month),
+      );
 
-      const snap = await getDocs(q);
+      const [modernSnap, legacySnap] = await Promise.all([
+        getDocs(modernQuery),
+        getDocs(legacyQuery),
+      ]);
+      const records = new Map();
+
+      modernSnap.forEach((document) => {
+        records.set(document.id, document.data());
+      });
+      legacySnap.forEach((document) => {
+        records.set(document.id, document.data());
+      });
 
       let totalPaid = 0;
 
-      snap.forEach((doc) => {
-        totalPaid += doc.data().amountPaid || 0;
+      records.forEach((payment) => {
+        if (getPaymentTenantId(payment) === form.tenantId) {
+          totalPaid += getPaymentAmount(payment);
+        }
       });
 
       const newTotalPaid = totalPaid + amountPaid;
@@ -197,6 +244,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
         tenantId: form.tenantId,
         tenantName: tenant?.name || "",
         tenantRoom: tenant?.room || "",
+        businessType: tenant?.businessType || "pg",
         month: form.month,
         totalRent,
         amountPaid,
@@ -230,7 +278,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
       >
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-            💰 Add Payment
+            Add Payment
           </h2>
           <button
             onClick={onClose}
@@ -254,17 +302,19 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
             {/* Tenant Select */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
-                Select Tenant *
+                Select Customer *
               </label>
               <select
                 value={form.tenantId}
                 onChange={handleTenantChange}
                 className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select tenant...</option>
+                <option value="">Select customer...</option>
                 {tenants.map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.name} — {t.room} (₹{t.rent?.toLocaleString()}/mo)
+                    {getBusinessType(t.businessType).label} — {t.name} —{" "}
+                    {getBusinessType(t.businessType).unitLabel} {t.room} (₹
+                    {t.rent?.toLocaleString("en-IN")})
                   </option>
                 ))}
               </select>
@@ -293,11 +343,13 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder={
                 totalRent
-                  ? `Max ₹${totalRent.toLocaleString()}`
-                  : "Select tenant first"
+                  ? `Max ₹${totalRent.toLocaleString("en-IN")}`
+                  : "Select customer first"
               }
               hint={
-                totalRent ? `Total rent: ₹${totalRent.toLocaleString()}` : ""
+                totalRent
+                  ? `${activeType.feeLabel}: ₹${totalRent.toLocaleString("en-IN")}`
+                  : ""
               }
             />
 
@@ -329,10 +381,10 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
 
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  Monthly Rent
+                  {activeType.feeLabel}
                 </span>
                 <span className="font-bold text-gray-800 dark:text-white">
-                  ₹{totalRent.toLocaleString()}
+                  ₹{totalRent.toLocaleString("en-IN")}
                 </span>
               </div>
 

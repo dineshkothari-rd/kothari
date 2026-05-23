@@ -5,6 +5,7 @@ import Button from "../common/Button";
 import { calculateSummary } from "../../utils/helper";
 import PaymentsTable from "../paymentsTable/PaymentsTable";
 import { useFirestoreCollection } from "../../hooks/useFirestoreCollection";
+import { businessTypeOptions, getBusinessType } from "../../utils/businessTypes";
 
 function BalancePayModal({ payment, onClose }) {
   const [amount, setAmount] = useState(payment.balance || 0);
@@ -38,7 +39,7 @@ function BalancePayModal({ payment, onClose }) {
         </h3>
         <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 flex flex-col gap-2">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Total Rent</span>
+            <span className="text-gray-500">Total Charge</span>
             <span className="font-bold text-gray-800 dark:text-white">
               ₹{payment.totalRent?.toLocaleString()}
             </span>
@@ -112,6 +113,7 @@ export default function PaymentList({ tenants }) {
   const [balancePayment, setBalancePayment] = useState(null);
   const [filterTenant, setFilterTenant] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterType, setFilterType] = useState("");
   const { data: payments, loading } = useFirestoreCollection("payments", {
     sortBy: "createdAt",
   });
@@ -130,9 +132,12 @@ export default function PaymentList({ tenants }) {
         const matchStatus = filterStatus
           ? payment.status === filterStatus
           : true;
-        return matchTenant && matchStatus;
+        const tenant = tenants.find((item) => item.id === payment.tenantId);
+        const paymentType = payment.businessType || tenant?.businessType || "pg";
+        const matchType = filterType ? paymentType === filterType : true;
+        return matchTenant && matchStatus && matchType;
       }),
-    [filterStatus, filterTenant, payments],
+    [filterStatus, filterTenant, filterType, payments, tenants],
   );
 
   const { totalPaid, totalPartial, totalOverdue, totalBalance } =
@@ -159,16 +164,28 @@ export default function PaymentList({ tenants }) {
           💰 Payment Records
         </h2>
         {/* Filters */}
-        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto">
+        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 lg:w-auto">
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          >
+            <option value="">All Businesses</option>
+            {businessTypeOptions.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.label}
+              </option>
+            ))}
+          </select>
           <select
             value={filterTenant}
             onChange={(e) => setFilterTenant(e.target.value)}
             className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
           >
-            <option value="">All Tenants</option>
+            <option value="">All Customers</option>
             {tenants.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.name}
+                {getBusinessType(t.businessType).label} — {t.name}
               </option>
             ))}
           </select>
