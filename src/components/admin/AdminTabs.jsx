@@ -18,7 +18,7 @@ export default function AdminTabs({ active, onChange }) {
           onClick={() => onChange(tab.id)}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${
             active === tab.id
-              ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-200 dark:shadow-blue-900/30"
+              ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white "
               : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-white"
           }`}
         >
