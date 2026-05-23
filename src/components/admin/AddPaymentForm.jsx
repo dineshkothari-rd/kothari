@@ -30,7 +30,7 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="px-4 py-2.5 rounded-xl border text-white border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm scheme-dark"
+        className="px-4 py-2.5 rounded-xl border text-white border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm scheme-light-dark"
       />
       {hint && <p className="text-xs text-gray-400">{hint}</p>}
     </div>
