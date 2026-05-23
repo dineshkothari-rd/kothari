@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
-import { doc, updateDoc, deleteDoc } from "firebase/firestore";
-import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
-import { calculateSummary } from "../../utils/helper";
+import { calculateSummary } from "../../utils/paymentUtils";
 import PaymentsTable from "../paymentsTable/PaymentsTable";
 import { useFirestoreCollection } from "../../hooks/useFirestoreCollection";
+import {
+  applyBalancePayment,
+  deletePaymentRecord,
+} from "../../services/paymentService";
 
 function BalancePayModal({ payment, onClose }) {
   const [amount, setAmount] = useState(payment.balance || 0);
@@ -13,15 +15,7 @@ function BalancePayModal({ payment, onClose }) {
   async function handlePay() {
     setLoading(true);
     try {
-      const newAmountPaid = payment.amountPaid + Number(amount);
-      const newBalance = payment.totalRent - newAmountPaid;
-      const newStatus = newBalance <= 0 ? "Paid" : "Partial";
-      await updateDoc(doc(db, "payments", payment.id), {
-        amountPaid: newAmountPaid,
-        balance: Math.max(0, newBalance),
-        status: newStatus,
-        paidOn: new Date().toLocaleDateString("en-IN"),
-      });
+      await applyBalancePayment(payment, amount);
       onClose();
     } catch (err) {
       alert("Error: " + err.message);
@@ -117,7 +111,7 @@ export default function PaymentList({ tenants }) {
   });
 
   async function handleDelete(id) {
-    await deleteDoc(doc(db, "payments", id));
+    await deletePaymentRecord(id);
     setDeletePayment(null);
   }
 

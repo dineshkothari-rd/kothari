@@ -1,21 +1,12 @@
 import { useState, useEffect } from "react";
-import {
-  collection,
-  onSnapshot,
-  doc,
-  updateDoc,
-  addDoc,
-  serverTimestamp,
-} from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
-
-const statusStyles = {
-  Paid: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  Pending:
-    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  Overdue: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-};
+import { PAYMENT_STATUS, PAYMENT_STATUS_STYLES } from "../../utils/paymentUtils";
+import {
+  createLegacyPaymentRecord,
+  updatePaymentStatus,
+} from "../../services/paymentService";
 
 function AddPaymentModal({ tenants, onClose }) {
   const [form, setForm] = useState({ userId: "", month: "", amount: "" });
@@ -29,15 +20,10 @@ function AddPaymentModal({ tenants, onClose }) {
     setLoading(true);
     const tenant = tenants.find((t) => t.id === form.userId);
     try {
-      await addDoc(collection(db, "payments"), {
-        userId: form.userId,
-        tenantName: tenant?.name || "",
-        amount: Number(form.amount),
+      await createLegacyPaymentRecord({
+        tenant,
         month: form.month,
-        status: "Pending",
-        paidOn: "",
-        razorpayId: "",
-        createdAt: serverTimestamp(),
+        amount: form.amount,
       });
       onClose();
     } catch (err) {
@@ -125,10 +111,7 @@ export default function ManagePayments({ tenants }) {
   }, []);
 
   async function updateStatus(id, status) {
-    await updateDoc(doc(db, "payments", id), {
-      status,
-      paidOn: status === "Paid" ? new Date().toLocaleDateString("en-IN") : "",
-    });
+    await updatePaymentStatus(id, status);
   }
 
   if (loading) return <p className="text-gray-400">Loading payments...</p>;
@@ -190,7 +173,7 @@ export default function ManagePayments({ tenants }) {
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[p.status]}`}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${PAYMENT_STATUS_STYLES[p.status]}`}
                       >
                         {p.status}
                       </span>
@@ -204,9 +187,9 @@ export default function ManagePayments({ tenants }) {
                         onChange={(e) => updateStatus(p.id, e.target.value)}
                         className="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none"
                       >
-                        <option>Pending</option>
-                        <option>Paid</option>
-                        <option>Overdue</option>
+                        <option>{PAYMENT_STATUS.PENDING}</option>
+                        <option>{PAYMENT_STATUS.PAID}</option>
+                        <option>{PAYMENT_STATUS.OVERDUE}</option>
                       </select>
                     </td>
                   </tr>

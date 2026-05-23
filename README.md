@@ -1,5 +1,18 @@
 # React + Vite
 
+## Payment Setup
+
+Online rent collection uses Razorpay Checkout from the admin payment form.
+
+1. Copy `.env.example` to `.env`.
+2. Set `VITE_RAZORPAY_KEY_ID` to your Razorpay key id.
+3. Restart the Vite dev server after changing environment variables.
+
+The current client-only flow stores the returned Razorpay payment id with the
+payment record. For production-grade verification, add a backend or Firebase
+Function to create Razorpay orders and verify payment signatures before marking
+payments as paid.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

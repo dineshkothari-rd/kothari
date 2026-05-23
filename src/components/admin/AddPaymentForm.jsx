@@ -1,14 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
-import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
+import {
+  PAYMENT_STATUS,
+  PAYMENT_STATUS_LABELS,
+  PAYMENT_STATUS_STYLES,
+  calculatePaymentBreakdown,
+  getProgressPercent,
+  toNumber,
+} from "../../utils/paymentUtils";
+import {
+  createPaymentRecord,
+  getPaidAmountForTenantMonth,
+} from "../../services/paymentService";
+import {
+  collectRazorpayPayment,
+  isRazorpayConfigured,
+} from "../../services/razorpayService";
 
 function InputField({
   label,
@@ -44,6 +51,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     amountPaid: "",
     note: "",
     paidOn: "",
+    paymentMode: "online",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -53,56 +61,30 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     () => tenants.find((tenant) => tenant.id === form.tenantId),
     [form.tenantId, tenants],
   );
-  const totalRent = selectedTenant?.rent || 0;
-  const amountPaid = Number(form.amountPaid) || 0;
+  const totalRent = toNumber(selectedTenant?.rent);
+  const amountPaid = toNumber(form.amountPaid);
   const previousPaid =
     previousBalance !== null ? totalRent - previousBalance : 0;
 
   const totalPaidTillNow = previousPaid + amountPaid;
 
-  const balance = Math.max(0, totalRent - totalPaidTillNow);
+  const { balance, status } = calculatePaymentBreakdown(
+    totalRent,
+    totalPaidTillNow,
+  );
+  const progressPercent = getProgressPercent(totalPaidTillNow, totalRent);
 
   const isFullyPaid =
     previousBalance !== null && totalRent > 0 && previousBalance <= 0;
-
-  function getStatus() {
-    if (totalPaidTillNow === 0) return "Pending";
-    if (totalPaidTillNow >= totalRent) return "Paid";
-    return "Partial";
-  }
-
-  const status = getStatus();
-
-  const statusStyles = {
-    Paid: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-    Pending:
-      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-    Partial:
-      "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  };
 
   const fetchBalance = useCallback(async (tenantId, month) => {
     if (!tenantId || !month) return;
 
     try {
       const tenant = tenants.find((t) => t.id === tenantId);
-      const totalRent = tenant?.rent || 0;
-
-      const q = query(
-        collection(db, "payments"),
-        where("tenantId", "==", tenantId),
-        where("month", "==", month),
-      );
-
-      const snap = await getDocs(q);
-
-      let totalPaid = 0;
-
-      snap.forEach((doc) => {
-        totalPaid += doc.data().amountPaid || 0;
-      });
-
-      const balance = Math.max(0, totalRent - totalPaid);
+      const totalRent = toNumber(tenant?.rent);
+      const totalPaid = await getPaidAmountForTenantMonth(tenantId, month);
+      const { balance } = calculatePaymentBreakdown(totalRent, totalPaid);
 
       setPreviousBalance(balance);
 
@@ -150,8 +132,8 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     }
 
     const tenant = tenants.find((t) => t.id === form.tenantId);
-    const totalRent = tenant?.rent || 0;
-    const amountPaid = Number(form.amountPaid) || 0;
+    const totalRent = toNumber(tenant?.rent);
+    const amountPaid = toNumber(form.amountPaid);
 
     if (amountPaid <= 0) {
       setError("Enter valid amount");
@@ -160,20 +142,10 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
 
     setLoading(true);
     try {
-      const q = query(
-        collection(db, "payments"),
-        where("tenantId", "==", form.tenantId),
-        where("month", "==", form.month),
+      const totalPaid = await getPaidAmountForTenantMonth(
+        form.tenantId,
+        form.month,
       );
-
-      const snap = await getDocs(q);
-
-      let totalPaid = 0;
-
-      snap.forEach((doc) => {
-        totalPaid += doc.data().amountPaid || 0;
-      });
-
       const newTotalPaid = totalPaid + amountPaid;
 
       if (newTotalPaid > totalRent) {
@@ -181,30 +153,28 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
         return;
       }
 
-      const balance = Math.max(0, totalRent - newTotalPaid);
+      let providerPaymentId = "";
 
-      const status =
-        newTotalPaid === 0
-          ? "Pending"
-          : newTotalPaid >= totalRent
-            ? "Paid"
-            : "Partial";
+      if (form.paymentMode === "online") {
+        const paymentResponse = await collectRazorpayPayment({
+          amount: amountPaid,
+          tenant,
+          month: form.month,
+          description: `Rent payment for ${tenant?.name || "tenant"} (${form.month})`,
+        });
+        providerPaymentId = paymentResponse.razorpay_payment_id || "";
+      }
 
-      await addDoc(collection(db, "payments"), {
-        tenantId: form.tenantId,
-        tenantName: tenant?.name || "",
-        tenantRoom: tenant?.room || "",
+      await createPaymentRecord({
+        tenant,
         month: form.month,
-        totalRent,
         amountPaid,
-        balance,
-        status,
-        paidOn:
-          amountPaid > 0
-            ? form.paidOn || new Date().toLocaleDateString("en-IN")
-            : "",
+        alreadyPaid: totalPaid,
+        paidOn: form.paidOn,
         note: form.note,
-        createdAt: serverTimestamp(),
+        paymentMode: form.paymentMode,
+        paymentProvider: form.paymentMode === "online" ? "razorpay" : "",
+        providerPaymentId,
       });
       onSuccess?.();
       onClose?.();
@@ -298,8 +268,28 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
               }
             />
 
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                Collection Mode
+              </label>
+              <select
+                name="paymentMode"
+                value={form.paymentMode}
+                onChange={handleChange}
+                className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="online">Collect online now</option>
+                <option value="manual">Record already received</option>
+              </select>
+              {form.paymentMode === "online" && !isRazorpayConfigured() && (
+                <p className="text-xs text-red-500">
+                  Add VITE_RAZORPAY_KEY_ID to enable online collection.
+                </p>
+              )}
+            </div>
+
             {/* Paid On */}
-            {amountPaid > 0 && (
+            {amountPaid > 0 && form.paymentMode === "manual" && (
               <InputField
                 label="Paid On"
                 name="paidOn"
@@ -371,13 +361,9 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
                   Status
                 </span>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold ${statusStyles[status]}`}
+                  className={`px-3 py-1 rounded-full text-xs font-bold ${PAYMENT_STATUS_STYLES[status]}`}
                 >
-                  {status === "Paid"
-                    ? "✅ Paid"
-                    : status === "Partial"
-                      ? "🔶 Partial"
-                      : "⏳ Pending"}
+                  {PAYMENT_STATUS_LABELS[status]}
                 </span>
               </div>
 
@@ -385,23 +371,19 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                 <div
                   className={`h-2 rounded-full transition-all duration-500 ${
-                    status === "Paid"
+                    status === PAYMENT_STATUS.PAID
                       ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                      : status === "Partial"
+                      : status === PAYMENT_STATUS.PARTIAL
                         ? "bg-gradient-to-r from-orange-400 to-amber-500"
                         : "bg-gray-300"
                   }`}
                   style={{
-                    width: `${Math.min(100, Math.round((totalPaidTillNow / totalRent) * 100))}%`,
+                    width: `${progressPercent}%`,
                   }}
                 />
               </div>
               <p className="text-xs text-gray-400 text-right">
-                {Math.min(
-                  100,
-                  Math.round((totalPaidTillNow / totalRent) * 100),
-                ) || 0}
-                % paid
+                {progressPercent}% paid
               </p>
             </div>
           )}
@@ -420,10 +402,14 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
             disabled={isFullyPaid || loading}
           >
             {loading
-              ? "Adding..."
+              ? form.paymentMode === "online"
+                ? "Opening Payment..."
+                : "Adding..."
               : isFullyPaid
                 ? "Already Paid"
-                : "Add Payment"}
+                : form.paymentMode === "online"
+                  ? "Collect & Add Payment"
+                  : "Add Payment"}
           </Button>
         </div>
       </div>

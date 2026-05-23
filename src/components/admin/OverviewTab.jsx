@@ -2,7 +2,7 @@ import {
   calculateSummary,
   calculateTenantDues,
   getMonthKey,
-} from "../../utils/helper";
+} from "../../utils/paymentUtils";
 import PaymentsTable from "../paymentsTable/PaymentsTable";
 import { useFirestoreCollection } from "../../hooks/useFirestoreCollection";
 
