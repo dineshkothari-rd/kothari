@@ -11,6 +11,12 @@ const getTenantRentMap = (tenants = []) =>
     return map;
   }, {});
 
+const getTenantMap = (tenants = []) =>
+  tenants.reduce((map, tenant) => {
+    map[tenant.id] = tenant;
+    return map;
+  }, {});
+
 const getMonthEndDate = (month) => {
   const [year, monthNumber] = month.split("-").map(Number);
   return new Date(year, monthNumber, 0, 23, 59, 59, 999);
@@ -29,6 +35,7 @@ const isTenantActiveForMonth = (tenant, month) => {
 export const normalizePayments = (data, tenants = []) => {
   const map = {};
   const tenantRentById = getTenantRentMap(tenants);
+  const tenantById = getTenantMap(tenants);
 
   data.forEach((p) => {
     const tenantId = getPaymentTenantId(p);
@@ -39,11 +46,15 @@ export const normalizePayments = (data, tenants = []) => {
     const key = `${tenantId}-${month}`;
     const amountPaid = getPaymentAmount(p);
     const totalRent = toNumber(p.totalRent) || tenantRentById[tenantId] || 0;
+    const tenant = tenantById[tenantId];
 
     if (!map[key]) {
       map[key] = {
         ...p,
         tenantId,
+        tenantName: p.tenantName || tenant?.name || "",
+        tenantRoom: p.tenantRoom || tenant?.room || "",
+        businessType: p.businessType || tenant?.businessType || "pg",
         month,
         amountPaid,
         totalRent,
@@ -100,6 +111,7 @@ export const calculateTenantDues = (
           id: tenant.id,
           name: tenant.name,
           room: tenant.room,
+          businessType: tenant.businessType || "pg",
           rent,
           paid,
           balance,

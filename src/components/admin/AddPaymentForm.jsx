@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
+import { getBusinessType } from "../../utils/businessTypes";
 
 function InputField({
   label,
@@ -53,6 +54,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     () => tenants.find((tenant) => tenant.id === form.tenantId),
     [form.tenantId, tenants],
   );
+  const activeType = getBusinessType(selectedTenant?.businessType);
   const totalRent = selectedTenant?.rent || 0;
   const amountPaid = Number(form.amountPaid) || 0;
   const previousPaid =
@@ -197,6 +199,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
         tenantId: form.tenantId,
         tenantName: tenant?.name || "",
         tenantRoom: tenant?.room || "",
+        businessType: tenant?.businessType || "pg",
         month: form.month,
         totalRent,
         amountPaid,
@@ -230,7 +233,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
       >
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-            💰 Add Payment
+            Add Payment
           </h2>
           <button
             onClick={onClose}
@@ -254,17 +257,19 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
             {/* Tenant Select */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
-                Select Tenant *
+                Select Customer *
               </label>
               <select
                 value={form.tenantId}
                 onChange={handleTenantChange}
                 className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select tenant...</option>
+                <option value="">Select customer...</option>
                 {tenants.map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.name} — {t.room} (₹{t.rent?.toLocaleString()}/mo)
+                    {getBusinessType(t.businessType).label} — {t.name} —{" "}
+                    {getBusinessType(t.businessType).unitLabel} {t.room} (₹
+                    {t.rent?.toLocaleString("en-IN")})
                   </option>
                 ))}
               </select>
@@ -293,11 +298,13 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder={
                 totalRent
-                  ? `Max ₹${totalRent.toLocaleString()}`
-                  : "Select tenant first"
+                  ? `Max ₹${totalRent.toLocaleString("en-IN")}`
+                  : "Select customer first"
               }
               hint={
-                totalRent ? `Total rent: ₹${totalRent.toLocaleString()}` : ""
+                totalRent
+                  ? `${activeType.feeLabel}: ₹${totalRent.toLocaleString("en-IN")}`
+                  : ""
               }
             />
 
@@ -329,10 +336,10 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
 
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  Monthly Rent
+                  {activeType.feeLabel}
                 </span>
                 <span className="font-bold text-gray-800 dark:text-white">
-                  ₹{totalRent.toLocaleString()}
+                  ₹{totalRent.toLocaleString("en-IN")}
                 </span>
               </div>
 

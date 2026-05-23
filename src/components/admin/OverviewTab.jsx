@@ -5,6 +5,7 @@ import {
 } from "../../utils/helper";
 import PaymentsTable from "../paymentsTable/PaymentsTable";
 import { useFirestoreCollection } from "../../hooks/useFirestoreCollection";
+import { businessTypeOptions, getBusinessType } from "../../utils/businessTypes";
 
 const avatarColors = [
   "from-blue-500 to-cyan-500",
@@ -68,13 +69,13 @@ export default function OverviewTab({ tenants }) {
   const stats = [
     {
       icon: "👥",
-      label: "Total Tenants",
+      label: "Customers",
       value: tenants.length,
       color: "from-blue-400 to-blue-600",
     },
     {
       icon: "💰",
-      label: "Monthly Revenue",
+      label: "Expected Revenue",
       value: `₹${totalRevenue.toLocaleString()}`,
       color: "from-green-400 to-emerald-600",
     },
@@ -95,6 +96,11 @@ export default function OverviewTab({ tenants }) {
 
   const recentTenants = tenants.slice(0, 5);
   const recentNotices = notices.slice(0, 3);
+  const typeCounts = businessTypeOptions.map((type) => ({
+    ...type,
+    count: tenants.filter((tenant) => (tenant.businessType || "pg") === type.id)
+      .length,
+  }));
 
   const noticeTypeStyles = {
     info: "border-l-4 border-blue-400 bg-blue-50 dark:bg-blue-900/10",
@@ -119,6 +125,25 @@ export default function OverviewTab({ tenants }) {
         ))}
       </div>
 
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {typeCounts.map((type) => (
+          <div
+            key={type.id}
+            className="rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              {type.label}
+            </p>
+            <p className="mt-1 text-2xl font-extrabold text-gray-900 dark:text-white">
+              {type.count}
+            </p>
+            <p className="text-xs text-gray-400">
+              {type.customerLabel}s using {type.unitLabel.toLowerCase()}s
+            </p>
+          </div>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Current Month Dues */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
@@ -127,7 +152,7 @@ export default function OverviewTab({ tenants }) {
           </h3>
           {pendingTenants.length === 0 ? (
             <p className="text-gray-400 text-sm text-center py-6">
-              All active tenants are paid for {currentMonth}.
+              All active customers are paid for {currentMonth}.
             </p>
           ) : (
             <div className="flex flex-col gap-3">
@@ -141,7 +166,8 @@ export default function OverviewTab({ tenants }) {
                       {tenant.name}
                     </p>
                     <p className="text-xs text-gray-400">
-                      {tenant.room || "No room"} • Paid ₹
+                      {getBusinessType(tenant.businessType).unitLabel}{" "}
+                      {tenant.room || "-"} • Paid ₹
                       {tenant.paid.toLocaleString()} of ₹
                       {tenant.rent.toLocaleString()}
                     </p>
@@ -163,11 +189,11 @@ export default function OverviewTab({ tenants }) {
         {/* Recent Tenants */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
           <h3 className="text-base font-bold text-gray-800 dark:text-white mb-4">
-            👥 Recent Tenants
+            Recent Customers
           </h3>
           {recentTenants.length === 0 ? (
             <p className="text-gray-400 text-sm text-center py-6">
-              No tenants yet
+              No customers yet
             </p>
           ) : (
             <div className="flex flex-col gap-3">
@@ -186,7 +212,9 @@ export default function OverviewTab({ tenants }) {
                       {t.name}
                     </p>
                     <p className="text-xs text-gray-400 truncate">
-                      {t.room} • ₹{t.rent?.toLocaleString()}/mo
+                      {getBusinessType(t.businessType).label} •{" "}
+                      {getBusinessType(t.businessType).unitLabel} {t.room} • ₹
+                      {t.rent?.toLocaleString("en-IN")}
                     </p>
                   </div>
                 </div>
@@ -230,7 +258,7 @@ export default function OverviewTab({ tenants }) {
       {/* Recent Payments */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
         <h3 className="text-base font-bold text-gray-800 dark:text-white mb-4">
-          💰 Recent Payments
+          Recent Payments
         </h3>
         <PaymentsTable payments={normalized.slice(0, 5)} />
       </div>

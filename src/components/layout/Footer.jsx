@@ -22,12 +22,11 @@ function FooterLogo() {
           🏠
         </div>
         <span className="text-xl font-extrabold text-white tracking-tight">
-          Kothari PG
+          Kothari Spaces
         </span>
       </div>
       <p className="max-w-xs text-sm leading-6 text-gray-400">
-        Premium paying guest accommodation for students and working
-        professionals.
+        Unified operations for hotel rooms, PG stays and library seats.
       </p>
       <div className="mt-2 flex gap-3">
         {["📘", "📸", "🐦"].map((icon) => (
@@ -93,7 +92,7 @@ function FooterBottom() {
   return (
     <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 sm:flex-row">
       <p className="text-gray-500 text-sm">
-        © {new Date().getFullYear()} Kothari PG. All rights reserved.
+        © {new Date().getFullYear()} Kothari Spaces. All rights reserved.
       </p>
       <div className="flex gap-4">
         <span className="text-gray-600 text-xs hover:text-gray-400 cursor-pointer transition">

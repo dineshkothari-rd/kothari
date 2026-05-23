@@ -3,9 +3,9 @@ import { fadeUp, staggerContainer } from "../common/motionConfig";
 import { MotionDiv, MotionH1, MotionP } from "../common/MotionPrimitives";
 
 const highlights = [
-  { value: "50+", label: "Happy Tenants" },
-  { value: "4.9", label: "Average Rating" },
-  { value: "3+", label: "Years Running" },
+  { value: "3", label: "Business Modes" },
+  { value: "1", label: "Simple Dashboard" },
+  { value: "24/7", label: "Records Access" },
 ];
 
 export default function HeroSection() {
@@ -21,22 +21,22 @@ export default function HeroSection() {
           variants={fadeUp}
           className="mx-auto mb-6 inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-semibold text-white/90 shadow-sm backdrop-blur"
         >
-          Rated PG accommodation in Jaipur
+          Hotel, PG and Library management
         </MotionP>
 
         <MotionH1
           variants={fadeUp}
           className="mx-auto max-w-4xl text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl"
         >
-          Comfortable PG living for students and professionals
+          One simple app for rooms, seats, payments and receipts
         </MotionH1>
 
         <MotionP
           variants={fadeUp}
           className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/78 sm:text-lg lg:text-xl"
         >
-          Clean rooms, reliable facilities, home-style meals, and simple admin
-          support in one dependable place.
+          Manage guests, tenants, library members, charges, dues and shareable
+          payment receipts from one modern workspace.
         </MotionP>
 
         <MotionDiv
@@ -47,13 +47,13 @@ export default function HeroSection() {
             to="/rooms"
             className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 py-3 text-sm font-bold text-blue-700 shadow-lg transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
-            View Rooms & Pricing
+            View Spaces & Pricing
           </Link>
           <Link
             to="/contact"
             className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/40 bg-white/10 px-7 py-3 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
-            Book a Free Visit
+            Contact Us
           </Link>
         </MotionDiv>
 
