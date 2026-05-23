@@ -68,7 +68,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 text-white shadow-lg transition-all duration-300 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800">
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-blue-700 dark:bg-gray-950 text-white shadow-lg">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
