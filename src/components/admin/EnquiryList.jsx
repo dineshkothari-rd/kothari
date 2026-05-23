@@ -11,6 +11,7 @@ import {
   MotionP,
   MotionSection,
 } from "../common/MotionPrimitives";
+import { openWhatsAppReminder } from "../../utils/adminActions";
 
 const statusStyles = {
   New: "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
@@ -214,14 +215,40 @@ export default function EnquiryList() {
                   <option value="Scheduled">Scheduled</option>
                   <option value="Closed">Closed</option>
                 </select>
-                <Button
-                  variant="danger"
-                  onClick={() => handleDelete(enquiry.id)}
-                  disabled={busyId === enquiry.id}
-                  className="sm:min-w-24"
-                >
-                  {busyId === enquiry.id ? "Saving..." : "Delete"}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={`tel:${enquiry.phone || ""}`}
+                    className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-gray-700 dark:text-slate-200"
+                  >
+                    Call
+                  </a>
+                  <a
+                    href={`mailto:${enquiry.email || ""}?subject=${encodeURIComponent("Thanks for your enquiry")}&body=${encodeURIComponent(`Hi ${enquiry.name || ""},\n\nThanks for contacting us. We will be happy to help you with availability and pricing.\n\nRegards,\nKothari Spaces`)}`}
+                    className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-gray-700 dark:text-slate-200"
+                  >
+                    Email
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openWhatsAppReminder(
+                        enquiry.phone,
+                        `Hi ${enquiry.name || ""}, thanks for your enquiry. We can help you with availability and pricing.`,
+                      )
+                    }
+                    className="inline-flex min-h-10 items-center justify-center rounded-full border border-green-200 px-4 py-2 text-sm font-bold text-green-700 transition hover:bg-green-50 dark:border-green-900 dark:text-green-300"
+                  >
+                    WhatsApp
+                  </button>
+                  <Button
+                    variant="danger"
+                    onClick={() => handleDelete(enquiry.id)}
+                    disabled={busyId === enquiry.id}
+                    className="sm:min-w-24"
+                  >
+                    {busyId === enquiry.id ? "Saving..." : "Delete"}
+                  </Button>
+                </div>
               </div>
             </MotionArticle>
           ))}

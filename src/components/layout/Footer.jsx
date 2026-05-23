@@ -10,7 +10,7 @@ const quickLinks = [
 const contactInfo = [
   { icon: "📍", text: "Siwani mandi, Bhiwani, Haryana 127046" },
   { icon: "📞", text: "+91 9812416720" },
-  { icon: "✉️", text: "kotharipg@gmail.com" },
+  { icon: "✉️", text: "pghotel6@gmail.com" },
   { icon: "🕐", text: "Mon - Sat, 10am to 7pm" },
 ];
 

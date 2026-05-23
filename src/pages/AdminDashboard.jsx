@@ -1,18 +1,20 @@
-import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import AdminTabs from "../components/admin/AdminTabs";
-import OverviewTab from "../components/admin/OverviewTab";
-import TenantList from "../components/admin/TenantList";
-import AddTenantForm from "../components/admin/AddTenantForm";
-import PaymentList from "../components/admin/PaymentList";
+import { useEffect, useState } from "react";
 import AddPaymentForm from "../components/admin/AddPaymentForm";
-import NoticeBoard from "../components/admin/NoticeBoard";
+import AddTenantForm from "../components/admin/AddTenantForm";
+import AdminTabs from "../components/admin/AdminTabs";
 import EnquiryList from "../components/admin/EnquiryList";
-import Button from "../components/common/Button";
-import { useFirestoreCollection } from "../hooks/useFirestoreCollection";
-import { MotionDiv } from "../components/common/MotionPrimitives";
+import LibraryCenter from "../components/admin/LibraryCenter";
 import MeterReadingForm from "../components/admin/MeterReadingForm";
 import MeterReadingList from "../components/admin/MeterReadingList";
+import NoticeBoard from "../components/admin/NoticeBoard";
+import OperationsCenter from "../components/admin/OperationsCenter";
+import OverviewTab from "../components/admin/OverviewTab";
+import PaymentList from "../components/admin/PaymentList";
+import TenantList from "../components/admin/TenantList";
+import Button from "../components/common/Button";
+import { MotionDiv } from "../components/common/MotionPrimitives";
+import { useFirestoreCollection } from "../hooks/useFirestoreCollection";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -40,6 +42,7 @@ export default function AdminDashboard() {
       {/* Modals */}
       {showAddTenant && (
         <AddTenantForm
+          tenants={tenants}
           onClose={() => setShowAddTenant(false)}
           onSuccess={() => {
             showSuccess("Customer added successfully!");
@@ -70,7 +73,8 @@ export default function AdminDashboard() {
                 Hotel, PG and Library Dashboard
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                Manage guests, tenants, members, payments, receipts and daily operations from one simple workspace.
+                Manage guests, tenants, members, payments, receipts and daily
+                operations from one simple workspace.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold text-slate-500 dark:text-slate-300">
@@ -128,6 +132,10 @@ export default function AdminDashboard() {
             <PaymentList tenants={tenants} />
           </div>
         )}
+
+        {activeTab === "operations" && <OperationsCenter tenants={tenants} />}
+
+        {activeTab === "library" && <LibraryCenter tenants={tenants} />}
 
         {activeTab === "enquiries" && <EnquiryList />}
 

@@ -3,12 +3,14 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
 import { businessTypeOptions, getBusinessType } from "../../utils/businessTypes";
+import { getAvailableRoomOptions } from "../../utils/rooms";
 
 const initialForm = {
   businessType: "pg",
   name: "",
   phone: "",
   email: "",
+  roomType: "single",
   room: "",
   rent: "",
   moveInDate: "",
@@ -41,7 +43,7 @@ function InputField({
   );
 }
 
-export default function AddTenantForm({ onClose, onSuccess }) {
+export default function AddTenantForm({ tenants = [], onClose, onSuccess }) {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -49,6 +51,8 @@ export default function AddTenantForm({ onClose, onSuccess }) {
   const [idPreview, setIdPreview] = useState(null);
   const [idBase64, setIdBase64] = useState(null);
   const activeType = getBusinessType(form.businessType);
+  const usesRoomDropdown = ["pg", "hotel"].includes(form.businessType);
+  const roomOptions = getAvailableRoomOptions(tenants, form.roomType);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -123,6 +127,7 @@ export default function AddTenantForm({ onClose, onSuccess }) {
         name: form.name,
         phone: form.phone,
         email: form.email,
+        roomType: form.roomType,
         room: form.room,
         rent: Number(form.rent),
         moveInDate: form.moveInDate,
@@ -177,6 +182,8 @@ export default function AddTenantForm({ onClose, onSuccess }) {
                 setForm((prev) => ({
                   ...prev,
                   businessType: type.id,
+                  room: "",
+                  roomType: "single",
                   services: prev.services.filter((service) =>
                     type.services.includes(service),
                   ),
@@ -227,15 +234,61 @@ export default function AddTenantForm({ onClose, onSuccess }) {
           {activeType.label} Details
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <InputField
-            label={`${activeType.unitLabel} *`}
-            name="room"
-            value={form.room}
-            onChange={handleChange}
-            placeholder={
-              form.businessType === "library" ? "Seat A12" : "101 - Single"
-            }
-          />
+          {usesRoomDropdown ? (
+            <>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Room Type *
+                </label>
+                <select
+                  name="roomType"
+                  value={form.roomType}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      roomType: event.target.value,
+                      room: "",
+                    })
+                  }
+                  className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+                >
+                  <option value="single">Single Bed</option>
+                  <option value="double">Double Room</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Room *
+                </label>
+                <select
+                  name="room"
+                  value={form.room}
+                  onChange={handleChange}
+                  className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+                >
+                  <option value="">Select room</option>
+                  {roomOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {roomOptions.length === 0 && (
+                  <p className="text-xs text-red-500">
+                    No rooms available for this room type.
+                  </p>
+                )}
+              </div>
+            </>
+          ) : (
+            <InputField
+              label={`${activeType.unitLabel} *`}
+              name="room"
+              value={form.room}
+              onChange={handleChange}
+              placeholder="Seat A12"
+            />
+          )}
           <InputField
             label={`${activeType.feeLabel} (₹) *`}
             name="rent"

@@ -71,6 +71,7 @@ export default function TenantList() {
       {editTenant && (
         <EditTenantForm
           tenant={editTenant}
+          tenants={tenants}
           onClose={() => setEditTenant(null)}
           onSuccess={() => setEditTenant(null)}
         />

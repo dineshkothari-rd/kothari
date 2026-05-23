@@ -11,6 +11,14 @@ import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
 import { getBusinessType } from "../../utils/businessTypes";
 
+function getPaymentTenantId(payment) {
+  return payment.tenantId || payment.userId || "";
+}
+
+function getPaymentAmount(payment) {
+  return Number(payment.amountPaid ?? payment.amount ?? 0) || 0;
+}
+
 function InputField({
   label,
   name,
@@ -91,18 +99,36 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
         const tenant = tenants.find((t) => t.id === tenantId);
         const totalRent = tenant?.rent || 0;
 
-        const q = query(
+        const modernQuery = query(
           collection(db, "payments"),
           where("tenantId", "==", tenantId),
           where("month", "==", month),
         );
+        const legacyQuery = query(
+          collection(db, "payments"),
+          where("userId", "==", tenantId),
+          where("month", "==", month),
+        );
 
-        const snap = await getDocs(q);
+        const [modernSnap, legacySnap] = await Promise.all([
+          getDocs(modernQuery),
+          getDocs(legacyQuery),
+        ]);
+        const records = new Map();
+
+        modernSnap.forEach((document) => {
+          records.set(document.id, document.data());
+        });
+        legacySnap.forEach((document) => {
+          records.set(document.id, document.data());
+        });
 
         let totalPaid = 0;
 
-        snap.forEach((doc) => {
-          totalPaid += doc.data().amountPaid || 0;
+        records.forEach((payment) => {
+          if (getPaymentTenantId(payment) === tenantId) {
+            totalPaid += getPaymentAmount(payment);
+          }
         });
 
         const balance = Math.max(0, totalRent - totalPaid);
@@ -132,6 +158,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     setForm((prev) => ({
       ...prev,
       tenantId,
+      amountPaid: "",
     }));
 
     setPreviousBalance(null);
@@ -165,18 +192,36 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
 
     setLoading(true);
     try {
-      const q = query(
+      const modernQuery = query(
         collection(db, "payments"),
         where("tenantId", "==", form.tenantId),
         where("month", "==", form.month),
       );
+      const legacyQuery = query(
+        collection(db, "payments"),
+        where("userId", "==", form.tenantId),
+        where("month", "==", form.month),
+      );
 
-      const snap = await getDocs(q);
+      const [modernSnap, legacySnap] = await Promise.all([
+        getDocs(modernQuery),
+        getDocs(legacyQuery),
+      ]);
+      const records = new Map();
+
+      modernSnap.forEach((document) => {
+        records.set(document.id, document.data());
+      });
+      legacySnap.forEach((document) => {
+        records.set(document.id, document.data());
+      });
 
       let totalPaid = 0;
 
-      snap.forEach((doc) => {
-        totalPaid += doc.data().amountPaid || 0;
+      records.forEach((payment) => {
+        if (getPaymentTenantId(payment) === form.tenantId) {
+          totalPaid += getPaymentAmount(payment);
+        }
       });
 
       const newTotalPaid = totalPaid + amountPaid;
