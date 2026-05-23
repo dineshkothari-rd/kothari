@@ -108,6 +108,7 @@ export default function TenantList() {
                   <th className="text-left py-3 px-4">Move In</th>
                   <th className="text-left py-3 px-4">Move Out</th>
                   <th className="text-left py-3 px-4">Services</th>
+                  <th className="text-left py-3 px-4">ID Proof</th>
                   <th className="text-left py-3 px-4">Actions</th>
                 </tr>
               </thead>
@@ -151,6 +152,30 @@ export default function TenantList() {
                         ))}
                       </div>
                     </td>
+                    <td className="py-3 px-4">
+                      {t.idProof ? (
+                        <button
+                          onClick={() => {
+                            const w = window.open();
+                            if (t.idProofType === "application/pdf") {
+                              w.document.write(
+                                `<iframe src="${t.idProof}" width="100%" height="100%"></iframe>`,
+                              );
+                            } else {
+                              w.document.write(
+                                `<img src="${t.idProof}" style="max-width:100%;"/>`,
+                              );
+                            }
+                          }}
+                          className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline text-xs font-medium"
+                        >
+                          🪪 View ID
+                        </button>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
                         <button

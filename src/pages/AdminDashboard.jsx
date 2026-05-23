@@ -11,12 +11,15 @@ import EnquiryList from "../components/admin/EnquiryList";
 import Button from "../components/common/Button";
 import { useFirestoreCollection } from "../hooks/useFirestoreCollection";
 import { MotionDiv } from "../components/common/MotionPrimitives";
+import MeterReadingForm from "../components/admin/MeterReadingForm";
+import MeterReadingList from "../components/admin/MeterReadingList";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [showAddTenant, setShowAddTenant] = useState(false);
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const [showMeterForm, setShowMeterForm] = useState(false);
   const { data: tenants } = useFirestoreCollection("tenants", {
     sortBy: "createdAt",
   });
@@ -102,7 +105,24 @@ export default function AdminDashboard() {
         {activeTab === "enquiries" && <EnquiryList />}
 
         {activeTab === "notices" && <NoticeBoard />}
+        {activeTab === "meter" && (
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-end">
+              <Button variant="primary" onClick={() => setShowMeterForm(true)}>
+                + Add Reading
+              </Button>
+            </div>
+            <MeterReadingList tenants={tenants} />
+          </div>
+        )}
       </div>
+      {showMeterForm && (
+        <MeterReadingForm
+          tenants={tenants}
+          onClose={() => setShowMeterForm(false)}
+          onSuccess={() => showSuccess("✅ Meter reading saved!")}
+        />
+      )}
     </div>
   );
 }

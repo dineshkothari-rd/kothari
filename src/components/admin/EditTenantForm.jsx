@@ -31,7 +31,7 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="px-4 py-2.5 rounded-xl border text-white border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm scheme-dark"
+        className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
       />
     </div>
   );
@@ -51,6 +51,15 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // ID Proof states — existing se initialize karo
+  const [idFile, setIdFile] = useState(null);
+  const [idPreview, setIdPreview] = useState(null);
+  const [idBase64, setIdBase64] = useState(tenant.idProof || null);
+  const [existingIdName, setExistingIdName] = useState(
+    tenant.idProofName || null,
+  );
+  const [idProofType, setIdProofType] = useState(tenant.idProofType || null);
+
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
@@ -62,6 +71,64 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
         ? prev.services.filter((s) => s !== service)
         : [...prev.services, service],
     }));
+  }
+
+  function handleIdFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const validTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+      "application/pdf",
+    ];
+    if (!validTypes.includes(file.type)) {
+      setError("Only JPG, PNG or PDF files are allowed");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError("File size must be less than 2MB");
+      return;
+    }
+
+    setError("");
+    setIdFile(file);
+    setIdProofType(file.type);
+    setExistingIdName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target.result;
+      setIdBase64(base64);
+      if (file.type !== "application/pdf") {
+        setIdPreview(base64);
+      } else {
+        setIdPreview("pdf");
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeIdFile() {
+    setIdFile(null);
+    setIdPreview(null);
+    setIdBase64(null);
+    setExistingIdName(null);
+    setIdProofType(null);
+  }
+
+  function viewExistingId() {
+    if (!idBase64) return;
+    const w = window.open();
+    if (idProofType === "application/pdf") {
+      w.document.write(
+        `<iframe src="${idBase64}" width="100%" height="100%"></iframe>`,
+      );
+    } else {
+      w.document.write(`<img src="${idBase64}" style="max-width:100%;"/>`);
+    }
   }
 
   async function handleUpdate() {
@@ -80,6 +147,9 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
         moveInDate: form.moveInDate,
         moveOutDate: form.moveOutDate,
         services: form.services,
+        idProof: idBase64 || null,
+        idProofName: existingIdName || null,
+        idProofType: idProofType || null,
       });
       onSuccess?.();
       onClose?.();
@@ -91,8 +161,8 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-8 overflow-y-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg flex flex-col gap-5">
+    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 px-4 py-8 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg flex flex-col gap-5 my-auto">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white">
             ✏️ Edit Tenant
@@ -111,6 +181,7 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
           </div>
         )}
 
+        {/* Personal Details */}
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
           Personal Details
         </p>
@@ -140,6 +211,7 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
           />
         </div>
 
+        {/* Room Details */}
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
           Room Details
         </p>
@@ -175,6 +247,106 @@ export default function EditTenantForm({ tenant, onClose, onSuccess }) {
           />
         </div>
 
+        {/* ID Proof */}
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          ID Proof
+        </p>
+
+        {/* Existing ID proof */}
+        {idBase64 && !idFile && (
+          <div className="border border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/10 rounded-2xl p-4 flex items-center gap-4">
+            {idProofType !== "application/pdf" ? (
+              <img
+                src={idBase64}
+                alt="ID Proof"
+                className="w-16 h-16 rounded-xl object-cover border border-gray-200 dark:border-gray-700 flex-shrink-0"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-3xl flex-shrink-0">
+                📄
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">
+                {existingIdName || "ID Proof"}
+              </p>
+              <span className="inline-block mt-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
+                ✓ Already uploaded
+              </span>
+            </div>
+            <div className="flex flex-col gap-2 flex-shrink-0">
+              <button
+                onClick={viewExistingId}
+                className="text-blue-600 dark:text-blue-400 hover:underline text-xs font-medium"
+              >
+                👁 View
+              </button>
+              <button
+                onClick={removeIdFile}
+                className="text-red-400 hover:text-red-600 text-xs font-medium"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* New file selected */}
+        {idFile && (
+          <div className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 flex items-center gap-4">
+            {idPreview && idPreview !== "pdf" ? (
+              <img
+                src={idPreview}
+                alt="ID Preview"
+                className="w-16 h-16 rounded-xl object-cover border border-gray-200 dark:border-gray-700 flex-shrink-0"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-3xl flex-shrink-0">
+                📄
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">
+                {idFile.name}
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {(idFile.size / 1024 / 1024).toFixed(2)} MB
+              </p>
+              <span className="inline-block mt-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">
+                ↑ New file selected
+              </span>
+            </div>
+            <button
+              onClick={removeIdFile}
+              className="text-red-400 hover:text-red-600 transition text-sm font-medium flex-shrink-0"
+            >
+              Remove
+            </button>
+          </div>
+        )}
+
+        {/* Upload new if no file selected */}
+        {!idFile && (
+          <label className="flex items-center gap-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-4 cursor-pointer hover:border-blue-400 transition">
+            <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-xl flex-shrink-0">
+              🪪
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                {idBase64 ? "Replace ID Proof" : "Upload ID Proof"}
+              </p>
+              <p className="text-xs text-gray-400">JPG, PNG or PDF • Max 2MB</p>
+            </div>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/jpg,application/pdf"
+              onChange={handleIdFileChange}
+              className="hidden"
+            />
+          </label>
+        )}
+
+        {/* Services */}
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
           Services Included
         </p>

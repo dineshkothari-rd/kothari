@@ -14,7 +14,7 @@ const rooms = [
   },
   {
     type: "Double Sharing",
-    price: "₹5,500",
+    price: "₹7,500",
     features: ["Shared room", "AC", "WiFi", "Meals"],
     emoji: "🛏️🛏️",
     tag: null,
@@ -22,7 +22,7 @@ const rooms = [
   },
   {
     type: "Triple Sharing",
-    price: "₹4,000",
+    price: "₹6,000",
     features: ["Shared room", "Fan", "WiFi", "Meals"],
     emoji: "🏨",
     tag: "Best Value",
