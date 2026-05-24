@@ -53,8 +53,9 @@ function SelectField({ label, name, value, onChange }) {
       >
         <option value="">Select room type</option>
         <option value="Single">Single Occupancy — ₹8,000/mo</option>
-        <option value="Double">Double Sharing — ₹5,500/mo</option>
-        <option value="Triple">Triple Sharing — ₹4,000/mo</option>
+        <option value="Double">Double Sharing — ₹7,500/mo</option>
+        <option value="Triple">Triple Sharing — ₹6,000/mo</option>
+        <option value="one-day">One Day Visit — ₹1,000</option>
       </select>
     </div>
   );
@@ -131,10 +132,7 @@ export default function ContactForm() {
         <p className="text-gray-500 dark:text-gray-400 max-w-xs">
           We'll contact you within 24 hours to schedule your visit.
         </p>
-        <Button
-          onClick={() => setSubmitted(false)}
-          className="mt-2 px-8"
-        >
+        <Button onClick={() => setSubmitted(false)} className="mt-2 px-8">
           Send Another
         </Button>
       </MotionDiv>
