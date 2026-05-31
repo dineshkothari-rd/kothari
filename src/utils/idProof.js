@@ -1,6 +1,11 @@
 const MAX_ID_PROOF_BYTES = 650 * 1024;
 
-const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
+const allowedTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/jpg",
+  "application/pdf",
+];
 
 export const idProofHelpText = "JPG, PNG or PDF - Max 650KB";
 
@@ -35,7 +40,7 @@ export function readIdProofFile(file) {
   });
 }
 
-export function openIdProof({ dataUrl, type, name = "ID Proof" }) {
+export function openIdProof({ dataUrl, name = "ID Proof" }) {
   if (!dataUrl) return false;
 
   const proofWindow = window.open("", "_blank");
@@ -47,10 +52,7 @@ export function openIdProof({ dataUrl, type, name = "ID Proof" }) {
 
   const safeName = escapeHtml(name);
   const safeUrl = escapeHtml(dataUrl);
-  const isPdf = type === "application/pdf";
-  const content = isPdf
-    ? `<iframe title="${safeName}" src="${safeUrl}"></iframe>`
-    : `<img src="${safeUrl}" alt="${safeName}" />`;
+  const content = `<img src="${safeUrl}" alt="${safeName}" />`;
 
   proofWindow.document.write(`<!doctype html>
     <html>
@@ -76,3 +78,35 @@ export function openIdProof({ dataUrl, type, name = "ID Proof" }) {
   proofWindow.document.close();
   return true;
 }
+
+export const compressImage = (file, quality = 0.6, maxWidth = 1200) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+
+      let { width, height } = img;
+
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+
+    reader.readAsDataURL(file);
+  });
+};

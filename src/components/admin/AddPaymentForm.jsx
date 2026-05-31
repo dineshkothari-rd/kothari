@@ -323,7 +323,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
                 {tenants.map((t) => (
                   <option key={t.id} value={t.id}>
                     {getBusinessType(t.businessType).label} — {t.name} —{" "}
-                    {getBusinessType(t.businessType).unitLabel} {t.room} (₹
+                    {t.room} (₹
                     {t.rent?.toLocaleString("en-IN")})
                   </option>
                 ))}

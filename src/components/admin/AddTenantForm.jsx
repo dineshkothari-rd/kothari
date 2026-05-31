@@ -1,15 +1,17 @@
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useState } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
-import Button from "../common/Button";
-import { businessTypeOptions, getBusinessType } from "../../utils/businessTypes";
 import {
+  businessTypeOptions,
+  getBusinessType,
+} from "../../utils/businessTypes";
+import {
+  compressImage,
   idProofHelpText,
   openIdProof,
-  readIdProofFile,
-  validateIdProofFile,
 } from "../../utils/idProof";
 import { getAvailableRoomOptions } from "../../utils/rooms";
+import Button from "../common/Button";
 
 const initialForm = {
   businessType: "pg",
@@ -22,6 +24,9 @@ const initialForm = {
   moveInDate: "",
   moveOutDate: "",
   services: [],
+  idProof: "",
+  idProofName: "",
+  idProofSize: 0,
 };
 
 function InputField({
@@ -58,9 +63,7 @@ export default function AddTenantForm({
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [idFile, setIdFile] = useState(null);
-  const [idPreview, setIdPreview] = useState(null);
-  const [idBase64, setIdBase64] = useState(null);
+
   const activeType = getBusinessType(form.businessType);
   const usesRoomDropdown = ["pg", "hotel"].includes(form.businessType);
   const roomOptions = getAvailableRoomOptions(roomRecords, form.roomType);
@@ -79,46 +82,46 @@ export default function AddTenantForm({
     }));
   }
 
-  async function handleIdFileChange(e) {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
+
     if (!file) return;
 
-    const validationError = validateIdProofFile(file);
-    if (validationError) {
-      setError(validationError);
-      e.target.value = "";
-      return;
-    }
+    const compressedBase64 = await compressImage(file);
 
-    setError("");
-    try {
-      const base64 = await readIdProofFile(file);
-      setIdBase64(base64);
-      setIdFile(file);
-      if (file.type !== "application/pdf") {
-        setIdPreview(base64);
-      } else {
-        setIdPreview("pdf");
-      }
-    } catch (readError) {
-      setError(readError.message);
-      e.target.value = "";
-    }
-  }
+    console.log(
+      "Compressed Size KB:",
+      Math.round(compressedBase64.length / 1024),
+    );
+
+    setForm((prev) => ({
+      ...prev,
+      idProof: compressedBase64,
+      idProofName: file.name,
+      idProofSize: file.size,
+    }));
+  };
 
   function removeIdFile() {
-    setIdFile(null);
-    setIdPreview(null);
-    setIdBase64(null);
+    setForm((prev) => ({
+      ...prev,
+      idProof: "",
+      idProofName: "",
+      idProofSize: 0,
+    }));
   }
 
   async function handleSubmit() {
     if (!form.name || !form.phone || !form.room || !form.rent) {
-      setError(`Name, phone, ${activeType.unitLabel.toLowerCase()} and amount are required`);
+      setError(
+        `Name, phone, ${activeType.unitLabel.toLowerCase()} and amount are required`,
+      );
       return;
     }
 
     setLoading(true);
+
+    console.log("Base64 Size KB:", Math.round(form.idProof.length / 1024));
     try {
       await addDoc(collection(db, "tenants"), {
         businessType: form.businessType,
@@ -131,9 +134,9 @@ export default function AddTenantForm({
         moveInDate: form.moveInDate,
         moveOutDate: form.moveOutDate,
         services: form.services,
-        idProof: idBase64 || null,
-        idProofName: idFile?.name || null,
-        idProofType: idFile?.type || null,
+        idProof: form.idProof || null,
+        idProofName: form.idProofName || null,
+        idProofSize: form.idProofSize || 0,
         status: "active",
         createdAt: serverTimestamp(),
       });
@@ -316,7 +319,7 @@ export default function AddTenantForm({
           ID Proof
         </p>
 
-        {!idFile ? (
+        {!form.idProof ? (
           <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-200 p-5 transition hover:border-blue-400 dark:border-gray-700 dark:hover:border-blue-500">
             <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-2xl">
               🪪
@@ -332,16 +335,16 @@ export default function AddTenantForm({
             </div>
             <input
               type="file"
-              accept="image/jpeg,image/png,image/jpg,application/pdf"
-              onChange={handleIdFileChange}
+              accept="image/*"
+              onChange={handleImageUpload}
               className="hidden"
             />
           </label>
         ) : (
           <div className="flex items-center gap-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-            {idPreview && idPreview !== "pdf" ? (
+            {form.idProof ? (
               <img
-                src={idPreview}
+                src={form.idProof}
                 alt="ID Preview"
                 className="w-16 h-16 rounded-xl object-cover border border-gray-200 dark:border-gray-700 flex-shrink-0"
               />
@@ -352,24 +355,25 @@ export default function AddTenantForm({
             )}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">
-                {idFile.name}
+                {form.idProofName}
               </p>
+
               <p className="text-xs text-gray-400 mt-0.5">
-                {(idFile.size / 1024 / 1024).toFixed(2)} MB
+                {(form.idProofSize / 1024 / 1024).toFixed(2)} MB
               </p>
+
               <span className="inline-block mt-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
                 ✓ Ready to save
               </span>
             </div>
             <div className="flex flex-shrink-0 flex-col gap-2">
-              {idBase64 && (
+              {form.idProof && (
                 <button
                   type="button"
                   onClick={() =>
                     openIdProof({
-                      dataUrl: idBase64,
-                      type: idFile.type,
-                      name: idFile.name,
+                      dataUrl: form.idProof,
+                      name: form.idProofName,
                     })
                   }
                   className="text-xs font-medium text-blue-600 transition hover:text-blue-700 dark:text-blue-400"
