@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { AnimatePresence } from "framer-motion";
 import { db } from "../../firebase/firebase";
@@ -21,6 +22,9 @@ function InputField({
   value,
   onChange,
   placeholder,
+  required = false,
+  pattern,
+  inputMode,
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -33,7 +37,10 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+        required={required}
+        pattern={pattern}
+        inputMode={inputMode}
+        className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
       />
     </div>
   );
@@ -49,7 +56,7 @@ function SelectField({ label, name, value, onChange }) {
         name={name}
         value={value}
         onChange={onChange}
-        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+        className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
       >
         <option value="">Select room type</option>
         <option value="Single">Single Occupancy — ₹8,000/mo</option>
@@ -73,17 +80,27 @@ function TextAreaField({ label, name, value, onChange, placeholder }) {
         onChange={onChange}
         placeholder={placeholder}
         rows={4}
-        className="resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+        className="resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
       />
     </div>
   );
 }
 
 export default function ContactForm() {
-  const [form, setForm] = useState(initialState);
+  const [searchParams] = useSearchParams();
+  const selectedRoomType = searchParams.get("roomType") || "";
+  const [form, setForm] = useState({
+    ...initialState,
+    roomType: selectedRoomType,
+  });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!selectedRoomType) return;
+    setForm((current) => ({ ...current, roomType: selectedRoomType }));
+  }, [selectedRoomType]);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -93,15 +110,32 @@ export default function ContactForm() {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!form.name || !form.phone || !form.email) {
+    const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
+    const phoneDigits = form.phone.replace(/\D/g, "");
+
+    if (!form.name.trim() || !form.phone.trim() || !form.email.trim()) {
       setError("Please fill in all required fields");
+      return;
+    }
+
+    if (phoneDigits.length < 10) {
+      setError("Please enter a valid phone number");
+      return;
+    }
+
+    if (!emailIsValid) {
+      setError("Please enter a valid email address");
       return;
     }
 
     setLoading(true);
     try {
       await addDoc(collection(db, "enquiries"), {
-        ...form,
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        roomType: form.roomType,
+        message: form.message.trim(),
         status: "New",
         createdAt: serverTimestamp(),
       });
@@ -121,7 +155,7 @@ export default function ContactForm() {
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="flex min-h-full flex-col items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-10"
+        className="card-modern flex min-h-full flex-col items-center justify-center gap-4 rounded-xl p-8 text-center sm:p-10"
       >
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-4xl shadow-lg">
           🎉
@@ -145,11 +179,11 @@ export default function ContactForm() {
       initial="hidden"
       animate="visible"
       onSubmit={handleSubmit}
-      className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8"
+      className="card-modern flex flex-col gap-5 rounded-xl p-5 sm:p-8"
     >
       <div>
         <h2 className="text-2xl font-extrabold text-gray-800 dark:text-white mb-1">
-          Book a Free Visit 🏠
+          Book a Free Visit
         </h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm">
           Fill in your details and we'll get back to you shortly.
@@ -162,7 +196,7 @@ export default function ContactForm() {
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"
           >
             {error}
           </MotionDiv>
@@ -175,6 +209,7 @@ export default function ContactForm() {
         value={form.name}
         onChange={handleChange}
         placeholder="Rahul Sharma"
+        required
       />
       <InputField
         label="Phone Number *"
@@ -183,6 +218,9 @@ export default function ContactForm() {
         value={form.phone}
         onChange={handleChange}
         placeholder="+91 98765 43210"
+        required
+        inputMode="tel"
+        pattern="[0-9+\-\s()]{10,}"
       />
       <InputField
         label="Email Address *"
@@ -191,6 +229,7 @@ export default function ContactForm() {
         value={form.email}
         onChange={handleChange}
         placeholder="rahul@gmail.com"
+        required
       />
       <SelectField
         label="Preferred Room Type"

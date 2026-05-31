@@ -1,27 +1,106 @@
 import { useMemo, useState } from "react";
-import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  serverTimestamp,
+  where,
+} from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
-import { calculateSummary } from "../../utils/helper";
+import InfiniteListFooter from "../common/InfiniteListFooter";
+import {
+  calculateSummary,
+  getPaymentAmount,
+  getPaymentTenantId,
+  normalizePayments,
+  toNumber,
+} from "../../utils/helper";
 import PaymentsTable from "../paymentsTable/PaymentsTable";
 import { useFirestoreCollection } from "../../hooks/useFirestoreCollection";
+import { useIncrementalList } from "../../hooks/useIncrementalList";
 import { businessTypeOptions, getBusinessType } from "../../utils/businessTypes";
 
-function BalancePayModal({ payment, onClose }) {
+function BalancePayModal({ payment, tenants, onClose }) {
   const [amount, setAmount] = useState(payment.balance || 0);
   const [loading, setLoading] = useState(false);
 
   async function handlePay() {
+    const payingNow = Number(amount);
+
+    if (!payingNow || payingNow <= 0) {
+      alert("Enter a valid payment amount.");
+      return;
+    }
+
+    if (payingNow > Number(payment.balance || 0)) {
+      alert("Payment cannot exceed the remaining balance.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const newAmountPaid = payment.amountPaid + Number(amount);
-      const newBalance = payment.totalRent - newAmountPaid;
+      const modernQuery = query(
+        collection(db, "payments"),
+        where("tenantId", "==", payment.tenantId),
+        where("month", "==", payment.month),
+      );
+      const legacyQuery = query(
+        collection(db, "payments"),
+        where("userId", "==", payment.tenantId),
+        where("month", "==", payment.month),
+      );
+      const [modernSnap, legacySnap] = await Promise.all([
+        getDocs(modernQuery),
+        getDocs(legacyQuery),
+      ]);
+      const records = new Map();
+
+      modernSnap.forEach((document) => {
+        records.set(document.id, document.data());
+      });
+      legacySnap.forEach((document) => {
+        records.set(document.id, document.data());
+      });
+
+      let totalPaid = 0;
+      records.forEach((record) => {
+        if (getPaymentTenantId(record) === payment.tenantId) {
+          totalPaid += getPaymentAmount(record);
+        }
+      });
+
+      const tenant = tenants.find((item) => item.id === payment.tenantId);
+      const totalRent = toNumber(payment.totalRent) || toNumber(tenant?.rent);
+      const currentBalance = Math.max(0, totalRent - totalPaid);
+
+      if (payingNow > currentBalance) {
+        alert(
+          `Payment cannot exceed the current remaining balance of ₹${currentBalance.toLocaleString("en-IN")}.`,
+        );
+        return;
+      }
+
+      const newTotalPaid = totalPaid + payingNow;
+      const newBalance = Math.max(0, totalRent - newTotalPaid);
       const newStatus = newBalance <= 0 ? "Paid" : "Partial";
-      await updateDoc(doc(db, "payments", payment.id), {
-        amountPaid: newAmountPaid,
-        balance: Math.max(0, newBalance),
+
+      await addDoc(collection(db, "payments"), {
+        tenantId: payment.tenantId,
+        tenantName: payment.tenantName || tenant?.name || "",
+        tenantRoom: payment.tenantRoom || tenant?.room || "",
+        businessType: payment.businessType || tenant?.businessType || "pg",
+        month: payment.month,
+        totalRent,
+        amountPaid: payingNow,
+        balance: newBalance,
         status: newStatus,
         paidOn: new Date().toLocaleDateString("en-IN"),
+        note: "Balance payment",
+        createdAt: serverTimestamp(),
       });
       onClose();
     } catch (err) {
@@ -32,12 +111,12 @@ function BalancePayModal({ payment, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm flex flex-col gap-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-0 sm:items-center sm:px-4">
+      <div className="flex w-full max-w-sm flex-col gap-4 rounded-t-xl bg-white p-4 shadow-xl dark:bg-gray-800 sm:rounded-xl sm:p-6">
         <h3 className="text-lg font-bold text-gray-800 dark:text-white">
           🔶 Pay Remaining Balance
         </h3>
-        <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 flex flex-col gap-2">
+        <div className="flex flex-col gap-2 rounded-xl bg-orange-50 p-4 dark:bg-orange-900/20">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Total Charge</span>
             <span className="font-bold text-gray-800 dark:text-white">
@@ -65,6 +144,7 @@ function BalancePayModal({ payment, onClose }) {
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
+            min="1"
             max={payment.balance}
             className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -84,8 +164,8 @@ function BalancePayModal({ payment, onClose }) {
 
 function ConfirmDelete({ onConfirm, onCancel }) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm flex flex-col gap-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-0 sm:items-center sm:px-4">
+      <div className="flex w-full max-w-sm flex-col gap-4 rounded-t-xl bg-white p-4 shadow-xl dark:bg-gray-800 sm:rounded-xl sm:p-6">
         <h3 className="text-lg font-bold text-gray-800 dark:text-white">
           Delete Payment?
         </h3>
@@ -98,7 +178,7 @@ function ConfirmDelete({ onConfirm, onCancel }) {
           </Button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full font-semibold transition text-sm"
+            className="min-h-10 flex-1 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700"
           >
             Delete
           </button>
@@ -118,30 +198,50 @@ export default function PaymentList({ tenants }) {
     sortBy: "createdAt",
   });
 
-  async function handleDelete(id) {
-    await deleteDoc(doc(db, "payments", id));
+  async function handleDelete(payment) {
+    const recordIds = payment.recordIds?.length
+      ? payment.recordIds
+      : [payment.sourceId || payment.id];
+
+    await Promise.all(
+      recordIds.filter(Boolean).map((id) => deleteDoc(doc(db, "payments", id))),
+    );
     setDeletePayment(null);
   }
 
+  const normalized = useMemo(
+    () => normalizePayments(payments, tenants),
+    [payments, tenants],
+  );
+
   const filtered = useMemo(
     () =>
-      payments.filter((payment) => {
+      normalized.filter((payment) => {
         const matchTenant = filterTenant
-          ? payment.tenantId === filterTenant
+          ? getPaymentTenantId(payment) === filterTenant
           : true;
         const matchStatus = filterStatus
           ? payment.status === filterStatus
           : true;
-        const tenant = tenants.find((item) => item.id === payment.tenantId);
+        const tenant = tenants.find(
+          (item) => item.id === getPaymentTenantId(payment),
+        );
         const paymentType = payment.businessType || tenant?.businessType || "pg";
         const matchType = filterType ? paymentType === filterType : true;
         return matchTenant && matchStatus && matchType;
       }),
-    [filterStatus, filterTenant, filterType, payments, tenants],
+    [filterStatus, filterTenant, filterType, normalized, tenants],
   );
 
   const { totalPaid, totalPartial, totalOverdue, totalBalance } =
     calculateSummary(filtered, tenants);
+  const {
+    visibleItems,
+    sentinelRef,
+    visibleCount,
+    hasMore,
+    loadMore,
+  } = useIncrementalList(filtered, 12);
 
   if (loading) return <p className="text-gray-400">Loading payments...</p>;
 
@@ -156,13 +256,19 @@ export default function PaymentList({ tenants }) {
       {balancePayment && (
         <BalancePayModal
           payment={balancePayment}
+          tenants={tenants}
           onClose={() => setBalancePayment(null)}
         />
       )}
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-          💰 Payment Records
-        </h2>
+        <div>
+          <h2 className="text-xl font-extrabold text-slate-950 dark:text-white">
+            Payment Records
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Monthly payment ledger with live balance tracking.
+          </p>
+        </div>
         {/* Filters */}
         <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 lg:w-auto">
           <select
@@ -204,33 +310,33 @@ export default function PaymentList({ tenants }) {
       </div>
       {/* Summary Cards */}
       <div className="mb-6 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4">
+        <div className="card-modern rounded-xl p-4">
           <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
-            ✅ Fully Paid
+            Fully Paid
           </p>
           <p className="text-xl font-extrabold text-green-700 dark:text-green-300 mt-1">
             ₹{totalPaid.toLocaleString()}
           </p>
         </div>
-        <div className="bg-orange-50 dark:bg-orange-900/20 rounded-2xl p-4">
+        <div className="card-modern rounded-xl p-4">
           <p className="text-xs text-orange-600 dark:text-orange-400 font-semibold">
-            🔶 Partial Paid
+            Partial Paid
           </p>
           <p className="text-xl font-extrabold text-orange-700 dark:text-orange-300 mt-1">
             ₹{totalPartial.toLocaleString()}
           </p>
         </div>
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl p-4">
+        <div className="card-modern rounded-xl p-4">
           <p className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold">
-            ⏳ Pending
+            Pending
           </p>
           <p className="text-xl font-extrabold text-yellow-700 dark:text-yellow-300 mt-1">
             ₹{totalBalance.toLocaleString()}
           </p>
         </div>
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-4">
+        <div className="card-modern rounded-xl p-4">
           <p className="text-xs text-red-600 dark:text-red-400 font-semibold">
-            🚨 Overdue
+            Overdue
           </p>
           <p className="text-xl font-extrabold text-red-700 dark:text-red-300 mt-1">
             ₹{totalOverdue.toLocaleString()}
@@ -238,9 +344,17 @@ export default function PaymentList({ tenants }) {
         </div>
       </div>
       <PaymentsTable
-        payments={filtered}
+        payments={visibleItems}
         canDeletePayment={true}
         setDeletePayment={setDeletePayment}
+        onPayBalance={setBalancePayment}
+      />
+      <InfiniteListFooter
+        total={filtered.length}
+        visible={visibleCount}
+        hasMore={hasMore}
+        loadMore={loadMore}
+        sentinelRef={sentinelRef}
       />
     </div>
   );

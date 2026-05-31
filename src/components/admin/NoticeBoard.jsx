@@ -79,15 +79,15 @@ function AddNoticeModal({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg flex flex-col gap-5">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/50 px-0 pt-8 sm:items-center sm:px-4 sm:py-8">
+      <div className="flex max-h-[92vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl dark:bg-gray-800 sm:max-h-[calc(100vh-4rem)] sm:rounded-xl sm:p-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-            📋 Add Notice
+            Add Notice
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-2xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
           >
             ✕
           </button>
@@ -110,10 +110,10 @@ function AddNoticeModal({ onClose }) {
                 key={opt.value}
                 type="button"
                 onClick={() => setForm({ ...form, type: opt.value })}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+                  className={`rounded-lg px-3 py-2 text-sm font-bold transition ${
                   form.type === opt.value
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                    : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
                 }`}
               >
                 {opt.label}
@@ -167,7 +167,7 @@ function AddNoticeModal({ onClose }) {
           </div>
         )}
 
-        <div className="flex gap-3 pt-2">
+        <div className="sticky bottom-0 -mx-4 mt-1 flex gap-3 border-t border-slate-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:static sm:mx-0 sm:border-t-0 sm:p-0 sm:pt-2">
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
           </Button>
@@ -184,15 +184,15 @@ function NoticeCard({ notice, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <div className={`rounded-xl p-4 ${typeStyleMap[notice.type]} relative`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 mb-1">
+    <div className={`relative rounded-xl p-4 ${typeStyleMap[notice.type]}`}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="mb-1 flex min-w-0 items-center gap-2">
           <span>{typeIcons[notice.type]}</span>
-          <p className="font-semibold text-gray-800 dark:text-white text-sm">
+          <p className="break-words text-sm font-semibold text-gray-800 dark:text-white">
             {notice.title}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center justify-between gap-2 sm:justify-end">
           <span className="text-xs text-gray-400">
             {notice.createdAt?.toDate().toLocaleDateString("en-IN") || ""}
           </span>
@@ -204,7 +204,7 @@ function NoticeCard({ notice, onDelete }) {
               Delete
             </button>
           ) : (
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
               <span className="text-xs text-gray-500">Sure?</span>
               <button
                 onClick={() => onDelete(notice.id)}
@@ -251,14 +251,23 @@ export default function NoticeBoard() {
   if (loading) return <p className="text-gray-400">Loading notices...</p>;
 
   return (
-    <div>
+    <div className="min-w-0">
       {showModal && <AddNoticeModal onClose={() => setShowModal(false)} />}
 
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-          📋 Notice Board
-        </h2>
-        <Button variant="primary" onClick={() => setShowModal(true)}>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-extrabold text-slate-950 dark:text-white">
+            Notice Board
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Publish updates and reminders for customers.
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          onClick={() => setShowModal(true)}
+          className="w-full sm:w-auto"
+        >
           + Add Notice
         </Button>
       </div>

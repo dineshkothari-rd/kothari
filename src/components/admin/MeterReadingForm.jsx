@@ -99,15 +99,15 @@ export default function MeterReadingForm({ tenants, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 px-4 py-8 overflow-y-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg flex flex-col gap-5 my-auto">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/50 px-0 pt-8 sm:items-center sm:px-4 sm:py-8">
+      <div className="flex max-h-[92vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl dark:bg-gray-800 sm:max-h-[calc(100vh-4rem)] sm:rounded-xl sm:p-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-            ⚡ Add Meter Reading
+            Add Meter Reading
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-2xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
           >
             ✕
           </button>
@@ -153,7 +153,7 @@ export default function MeterReadingForm({ tenants, onClose, onSuccess }) {
         </div>
 
         {/* Readings */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-gray-600 dark:text-gray-300">
               Previous Reading
@@ -181,9 +181,9 @@ export default function MeterReadingForm({ tenants, onClose, onSuccess }) {
 
         {/* Live Bill Summary */}
         {selectedTenant && form.currentReading && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-2xl p-4 flex flex-col gap-3">
+          <div className="flex flex-col gap-3 rounded-xl border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/10">
             <p className="text-xs font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-wider">
-              ⚡ Bill Summary
+              Bill Summary
             </p>
 
             <div className="flex justify-between text-sm">
@@ -250,7 +250,7 @@ export default function MeterReadingForm({ tenants, onClose, onSuccess }) {
           />
         </div>
 
-        <div className="flex gap-3 pt-2">
+        <div className="sticky bottom-0 -mx-4 mt-1 flex gap-3 border-t border-slate-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:static sm:mx-0 sm:border-t-0 sm:p-0 sm:pt-2">
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
           </Button>

@@ -4,6 +4,7 @@ import { MotionDiv } from "../common/MotionPrimitives";
 
 export default function RoomCard({
   type,
+  category,
   price,
   features,
   emoji,
@@ -61,7 +62,7 @@ export default function RoomCard({
       </ul>
 
       <Link
-        to="/contact"
+        to={`/contact?roomType=${encodeURIComponent(category)}`}
         className={`inline-flex min-h-11 w-full items-center justify-center rounded-full px-4 py-3 text-center text-sm font-bold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
           popular
             ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:opacity-90 shadow-md"

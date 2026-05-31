@@ -12,11 +12,11 @@ function ThemeToggle() {
       onClick={toggleTheme}
       title="Toggle theme"
       aria-label="Toggle theme"
-      className="rounded-full bg-white/10 p-2 transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+      className="rounded-xl border border-slate-200 bg-white p-2 text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-800 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800"
     >
       {theme === "dark" ? (
         <svg
-          className="w-4 h-4 text-white"
+          className="w-4 h-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -30,7 +30,7 @@ function ThemeToggle() {
         </svg>
       ) : (
         <svg
-          className="w-4 h-4 text-white"
+          className="w-4 h-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -68,11 +68,11 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/10 bg-blue-700 dark:bg-gray-950 text-white shadow-lg">
+    <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/88 text-slate-900 shadow-sm backdrop-blur-xl dark:border-gray-800/80 dark:bg-gray-950/88 dark:text-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-lg">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-lg text-white shadow-sm dark:bg-white dark:text-slate-950">
             🏠
           </div>
           <span className="text-lg font-extrabold tracking-tight sm:text-xl">
@@ -86,10 +86,10 @@ export default function Navbar() {
             <Link
               key={link.name}
               to={link.path}
-              className={`text-sm font-semibold transition-all duration-200 hover:text-white/80 ${
+              className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all duration-200 ${
                 location.pathname === link.path
-                  ? "text-white border-b-2 border-white pb-0.5"
-                  : "text-white/80"
+                  ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/60 dark:text-blue-200"
+                  : "border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-gray-900 dark:hover:text-white"
               }`}
             >
               {link.name}
@@ -100,12 +100,12 @@ export default function Navbar() {
 
           {currentUser ? (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-white/80 font-medium">
-                👋 {adminName}
+              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                {adminName}
               </span>
               <button
                 onClick={handleLogout}
-                className="bg-white text-blue-700 px-4 py-1.5 rounded-full text-sm font-bold hover:bg-blue-50 transition"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 dark:border-gray-800 dark:bg-gray-900 dark:text-slate-200 dark:hover:bg-gray-800"
               >
                 Logout
               </button>
@@ -113,7 +113,7 @@ export default function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="bg-white text-blue-700 px-5 py-1.5 rounded-full text-sm font-bold hover:bg-blue-50 transition shadow"
+              className="rounded-xl bg-slate-950 px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
             >
               Login
             </Link>
@@ -127,7 +127,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen((open) => !open)}
             aria-expanded={menuOpen}
             aria-label="Toggle navigation menu"
-            className="rounded-xl bg-white/10 p-2 transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+            className="rounded-xl border border-slate-200 bg-white p-2 text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-800 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800"
           >
             <svg
               className="w-5 h-5"
@@ -157,14 +157,16 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="flex flex-col gap-2 border-t border-white/10 bg-blue-800/95 px-4 pb-4 pt-2 backdrop-blur-sm dark:bg-gray-900/95 md:hidden">
+        <div className="flex flex-col gap-2 border-t border-slate-200 bg-white/96 px-4 pb-4 pt-2 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-950/96 md:hidden">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               to={link.path}
               onClick={() => setMenuOpen(false)}
-              className={`text-sm font-semibold py-2 border-b border-white/10 ${
-                location.pathname === link.path ? "text-white" : "text-white/75"
+              className={`rounded-lg border px-3 py-2 text-sm font-semibold ${
+                location.pathname === link.path
+                  ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/60 dark:text-blue-200"
+                  : "border-transparent text-slate-600 dark:text-slate-300"
               }`}
             >
               {link.name}
@@ -173,7 +175,7 @@ export default function Navbar() {
           {currentUser ? (
             <button
               onClick={handleLogout}
-              className="bg-white text-blue-700 px-4 py-2 rounded-full font-bold text-sm text-center"
+              className="rounded-xl bg-slate-950 px-4 py-2 text-center text-sm font-bold text-white dark:bg-white dark:text-slate-950"
             >
               Logout
             </button>
@@ -181,7 +183,7 @@ export default function Navbar() {
             <Link
               to="/login"
               onClick={() => setMenuOpen(false)}
-              className="bg-white text-blue-700 px-4 py-2 rounded-full font-bold text-sm text-center"
+              className="rounded-xl bg-slate-950 px-4 py-2 text-center text-sm font-bold text-white dark:bg-white dark:text-slate-950"
             >
               Login
             </Link>

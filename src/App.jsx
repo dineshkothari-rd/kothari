@@ -32,9 +32,9 @@ function App() {
           <Route
             path="/*"
             element={
-              <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-gray-950">
+              <div className="app-surface flex min-h-screen flex-col">
                 <Navbar />
-                <main className="grow">
+                <main className="grow pb-20 sm:pb-0">
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/rooms" element={<Rooms />} />

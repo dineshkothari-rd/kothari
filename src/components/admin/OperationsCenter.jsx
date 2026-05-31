@@ -16,6 +16,7 @@ import {
   openWhatsAppReminder,
 } from "../../utils/adminActions";
 import { getBusinessType } from "../../utils/businessTypes";
+import { getPaymentAmount, getPaymentTenantId } from "../../utils/helper";
 import { getRoomInventory, parseRoomLabel } from "../../utils/rooms";
 import Button from "../common/Button";
 import { EmptyState, Panel, SimpleTable, StatusPill } from "./AdminFeatureUI";
@@ -26,9 +27,10 @@ function paidForMonth(payments, tenantId) {
   return payments
     .filter(
       (payment) =>
-        payment.tenantId === tenantId && payment.month === currentMonth(),
+        getPaymentTenantId(payment) === tenantId &&
+        payment.month === currentMonth(),
     )
-    .reduce((sum, payment) => sum + (Number(payment.amountPaid) || 0), 0);
+    .reduce((sum, payment) => sum + getPaymentAmount(payment), 0);
 }
 
 function roomStatus(room, customers) {

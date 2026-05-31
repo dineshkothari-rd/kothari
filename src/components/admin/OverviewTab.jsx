@@ -23,9 +23,9 @@ function getInitials(name) {
 
 function StatCard({ icon, label, value, hint, color }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 flex items-center gap-4 hover:shadow-md transition">
+    <div className="card-modern flex items-center gap-4 rounded-xl p-4 transition hover:-translate-y-0.5 sm:p-5">
       <div
-        className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center text-2xl flex-shrink-0`}
+        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center text-2xl flex-shrink-0`}
       >
         {icon}
       </div>
@@ -129,7 +129,7 @@ export default function OverviewTab({ tenants }) {
         {typeCounts.map((type) => (
           <div
             key={type.id}
-            className="rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+            className="card-modern rounded-xl p-4"
           >
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
               {type.label}
@@ -146,7 +146,7 @@ export default function OverviewTab({ tenants }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Current Month Dues */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+        <div className="card-modern rounded-xl p-5 sm:p-6">
           <h3 className="text-base font-bold text-gray-800 dark:text-white mb-4">
             Current Month Dues
           </h3>
@@ -159,7 +159,7 @@ export default function OverviewTab({ tenants }) {
               {pendingTenants.slice(0, 5).map((tenant) => (
                 <div
                   key={tenant.id}
-                  className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-900"
+                  className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-900"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-gray-800 dark:text-white">
@@ -187,7 +187,7 @@ export default function OverviewTab({ tenants }) {
         </div>
 
         {/* Recent Tenants */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+        <div className="card-modern rounded-xl p-5 sm:p-6">
           <h3 className="text-base font-bold text-gray-800 dark:text-white mb-4">
             Recent Customers
           </h3>
@@ -200,10 +200,10 @@ export default function OverviewTab({ tenants }) {
               {recentTenants.map((t, i) => (
                 <div
                   key={t.id}
-                  className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl"
+                  className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-900"
                 >
                   <div
-                    className={`w-10 h-10 rounded-xl bg-gradient-to-br ${avatarColors[i % avatarColors.length]} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}
+                    className={`w-10 h-10 rounded-lg bg-gradient-to-br ${avatarColors[i % avatarColors.length]} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}
                   >
                     {getInitials(t.name)}
                   </div>
@@ -224,7 +224,7 @@ export default function OverviewTab({ tenants }) {
         </div>
 
         {/* Recent Notices */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+        <div className="card-modern rounded-xl p-5 sm:p-6">
           <h3 className="text-base font-bold text-gray-800 dark:text-white mb-4">
             📋 Recent Notices
           </h3>
@@ -237,7 +237,7 @@ export default function OverviewTab({ tenants }) {
               {recentNotices.map((n) => (
                 <div
                   key={n.id}
-                  className={`rounded-xl p-3 ${noticeTypeStyles[n.type]}`}
+                  className={`rounded-lg p-3 ${noticeTypeStyles[n.type]}`}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-sm">{noticeIcons[n.type]}</span>
@@ -256,7 +256,7 @@ export default function OverviewTab({ tenants }) {
       </div>
 
       {/* Recent Payments */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+      <div className="card-modern rounded-xl p-5 sm:p-6">
         <h3 className="text-base font-bold text-gray-800 dark:text-white mb-4">
           Recent Payments
         </h3>

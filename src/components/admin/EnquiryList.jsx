@@ -3,7 +3,9 @@ import { doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { AnimatePresence } from "framer-motion";
 import { db } from "../../firebase/firebase";
 import { useFirestoreCollection } from "../../hooks/useFirestoreCollection";
+import { useIncrementalList } from "../../hooks/useIncrementalList";
 import Button from "../common/Button";
+import InfiniteListFooter from "../common/InfiniteListFooter";
 import { fadeUp, staggerContainer } from "../common/motionConfig";
 import {
   MotionArticle,
@@ -45,6 +47,13 @@ export default function EnquiryList() {
   } = useFirestoreCollection("enquiries", {
     sortBy: "createdAt",
   });
+  const {
+    visibleItems,
+    sentinelRef,
+    visibleCount,
+    hasMore,
+    loadMore,
+  } = useIncrementalList(enquiries, 10);
 
   async function updateStatus(id, status) {
     setActionError("");
@@ -125,7 +134,7 @@ export default function EnquiryList() {
             Track contact form leads and visitor follow-ups.
           </p>
         </div>
-        <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+        <p className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-500 shadow-sm dark:bg-gray-900 dark:text-gray-400">
           {enquiries.length} total
         </p>
       </div>
@@ -153,14 +162,14 @@ export default function EnquiryList() {
       ) : (
         <MotionDiv
           variants={staggerContainer}
-          className="grid grid-cols-1 gap-4 lg:grid-cols-2"
+          className="grid grid-cols-1 gap-3 lg:grid-cols-2"
         >
-          {enquiries.map((enquiry) => (
+          {visibleItems.map((enquiry) => (
             <MotionArticle
               key={enquiry.id}
               variants={fadeUp}
               layout
-              className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+              className="card-modern flex flex-col gap-4 rounded-xl p-4 sm:p-5"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -172,7 +181,7 @@ export default function EnquiryList() {
                   </p>
                 </div>
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-bold ${
+                  className={`rounded-lg px-3 py-1 text-xs font-bold ${
                     statusStyles[enquiry.status] ?? statusStyles.New
                   }`}
                 >
@@ -196,7 +205,7 @@ export default function EnquiryList() {
               </div>
 
               {enquiry.message && (
-                <p className="rounded-xl bg-slate-50 p-3 text-sm leading-6 text-slate-600 dark:bg-gray-950 dark:text-slate-300">
+                <p className="rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-600 dark:bg-gray-950 dark:text-slate-300">
                   {enquiry.message}
                 </p>
               )}
@@ -208,7 +217,7 @@ export default function EnquiryList() {
                   onChange={(event) =>
                     updateStatus(enquiry.id, event.target.value)
                   }
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+                    className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
                 >
                   <option value="New">New</option>
                   <option value="Contacted">Contacted</option>
@@ -218,13 +227,13 @@ export default function EnquiryList() {
                 <div className="flex flex-wrap gap-2">
                   <a
                     href={`tel:${enquiry.phone || ""}`}
-                    className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-gray-700 dark:text-slate-200"
+                    className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-gray-700 dark:text-slate-200"
                   >
                     Call
                   </a>
                   <a
                     href={`mailto:${enquiry.email || ""}?subject=${encodeURIComponent("Thanks for your enquiry")}&body=${encodeURIComponent(`Hi ${enquiry.name || ""},\n\nThanks for contacting us. We will be happy to help you with availability and pricing.\n\nRegards,\nKothari Spaces`)}`}
-                    className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-gray-700 dark:text-slate-200"
+                    className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-gray-700 dark:text-slate-200"
                   >
                     Email
                   </a>
@@ -236,7 +245,7 @@ export default function EnquiryList() {
                         `Hi ${enquiry.name || ""}, thanks for your enquiry. We can help you with availability and pricing.`,
                       )
                     }
-                    className="inline-flex min-h-10 items-center justify-center rounded-full border border-green-200 px-4 py-2 text-sm font-bold text-green-700 transition hover:bg-green-50 dark:border-green-900 dark:text-green-300"
+                    className="inline-flex min-h-10 items-center justify-center rounded-lg border border-green-200 px-4 py-2 text-sm font-bold text-green-700 transition hover:bg-green-50 dark:border-green-900 dark:text-green-300"
                   >
                     WhatsApp
                   </button>
@@ -252,6 +261,15 @@ export default function EnquiryList() {
               </div>
             </MotionArticle>
           ))}
+          <div className="lg:col-span-2">
+            <InfiniteListFooter
+              total={enquiries.length}
+              visible={visibleCount}
+              hasMore={hasMore}
+              loadMore={loadMore}
+              sentinelRef={sentinelRef}
+            />
+          </div>
         </MotionDiv>
       )}
     </MotionSection>

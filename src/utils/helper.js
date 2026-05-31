@@ -1,8 +1,12 @@
-const toNumber = (value) => Number(value) || 0;
+export const toNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
 
-const getPaymentTenantId = (payment) => payment.tenantId || payment.userId || "";
+export const getPaymentTenantId = (payment) =>
+  payment.tenantId || payment.userId || "";
 
-const getPaymentAmount = (payment) =>
+export const getPaymentAmount = (payment) =>
   toNumber(payment.amountPaid ?? payment.amount ?? 0);
 
 const getTenantRentMap = (tenants = []) =>
@@ -51,6 +55,9 @@ export const normalizePayments = (data, tenants = []) => {
     if (!map[key]) {
       map[key] = {
         ...p,
+        id: key,
+        sourceId: p.id,
+        recordIds: p.id ? [p.id] : [],
         tenantId,
         tenantName: p.tenantName || tenant?.name || "",
         tenantRoom: p.tenantRoom || tenant?.room || "",
@@ -62,6 +69,7 @@ export const normalizePayments = (data, tenants = []) => {
     } else {
       map[key].amountPaid += amountPaid;
       map[key].totalRent = Math.max(map[key].totalRent || 0, totalRent);
+      if (p.id) map[key].recordIds.push(p.id);
     }
 
     const paid = map[key].amountPaid || 0;
@@ -132,11 +140,11 @@ export const calculateSummary = (filtered, tenants = []) => {
   let totalOverdue = 0;
   let totalBalance = 0;
 
-  const today = new Date();
+  const currentMonth = getMonthKey();
 
   normalized.forEach((p) => {
-    const total = p.totalRent || 0;
-    const paid = p.amountPaid || 0;
+    const total = toNumber(p.totalRent);
+    const paid = toNumber(p.amountPaid);
     const balance = Math.max(0, total - paid);
 
     if (paid >= total) {
@@ -145,9 +153,11 @@ export const calculateSummary = (filtered, tenants = []) => {
       totalPartial += paid;
       totalBalance += balance;
     } else {
-      if (p.paidOn && new Date(p.paidOn) < today) {
-        totalOverdue += total;
-      }
+      totalBalance += balance;
+    }
+
+    if (balance > 0 && p.month && p.month < currentMonth) {
+      totalOverdue += balance;
     }
   });
 

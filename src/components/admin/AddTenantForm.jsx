@@ -3,6 +3,12 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
 import { businessTypeOptions, getBusinessType } from "../../utils/businessTypes";
+import {
+  idProofHelpText,
+  openIdProof,
+  readIdProofFile,
+  validateIdProofFile,
+} from "../../utils/idProof";
 import { getAvailableRoomOptions } from "../../utils/rooms";
 
 const initialForm = {
@@ -73,44 +79,31 @@ export default function AddTenantForm({
     }));
   }
 
-  function handleIdFileChange(e) {
+  async function handleIdFileChange(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    const validTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/jpg",
-      "application/pdf",
-    ];
-    if (!validTypes.includes(file.type)) {
-      setError("Only JPG, PNG or PDF files are allowed");
-      return;
-    }
-
-    // Max 2MB for base64 (Firestore document limit)
-    if (file.size > 2 * 1024 * 1024) {
-      setError("File size must be less than 2MB for ID proof");
+    const validationError = validateIdProofFile(file);
+    if (validationError) {
+      setError(validationError);
+      e.target.value = "";
       return;
     }
 
     setError("");
-    setIdFile(file);
-
-    // Convert to base64
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target.result;
+    try {
+      const base64 = await readIdProofFile(file);
       setIdBase64(base64);
-
-      // Preview for images
+      setIdFile(file);
       if (file.type !== "application/pdf") {
         setIdPreview(base64);
       } else {
         setIdPreview("pdf");
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (readError) {
+      setError(readError.message);
+      e.target.value = "";
+    }
   }
 
   function removeIdFile() {
@@ -154,15 +147,15 @@ export default function AddTenantForm({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 px-4 py-8  overflow-y-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg flex flex-col h-full overflow-auto gap-5 my-auto">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/50 px-0 pt-8 sm:items-center sm:px-4 sm:py-8">
+      <div className="flex max-h-[92vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl dark:bg-gray-800 sm:max-h-[calc(100vh-4rem)] sm:rounded-xl sm:p-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white">
             Add Customer
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-2xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
           >
             ✕
           </button>
@@ -194,10 +187,10 @@ export default function AddTenantForm({
                   ),
                 }))
               }
-              className={`min-h-11 rounded-xl border px-3 text-sm font-bold transition ${
+              className={`min-h-11 rounded-lg border px-2 text-sm font-bold transition ${
                 form.businessType === type.id
-                  ? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-950"
-                  : "border-gray-200 bg-gray-50 text-gray-600 hover:border-blue-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                  ? "border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500"
+                  : "border-gray-200 bg-gray-50 text-gray-700 hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
               }`}
             >
               {type.label}
@@ -324,7 +317,7 @@ export default function AddTenantForm({
         </p>
 
         {!idFile ? (
-          <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-6 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition">
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-200 p-5 transition hover:border-blue-400 dark:border-gray-700 dark:hover:border-blue-500">
             <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-2xl">
               🪪
             </div>
@@ -335,7 +328,7 @@ export default function AddTenantForm({
               <p className="text-xs text-gray-400 mt-0.5">
                 Aadhar, PAN, Passport, Driving License
               </p>
-              <p className="text-xs text-gray-400">JPG, PNG or PDF • Max 2MB</p>
+              <p className="text-xs text-gray-400">{idProofHelpText}</p>
             </div>
             <input
               type="file"
@@ -345,7 +338,7 @@ export default function AddTenantForm({
             />
           </label>
         ) : (
-          <div className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 flex items-center gap-4">
+          <div className="flex items-center gap-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
             {idPreview && idPreview !== "pdf" ? (
               <img
                 src={idPreview}
@@ -368,12 +361,29 @@ export default function AddTenantForm({
                 ✓ Ready to save
               </span>
             </div>
-            <button
-              onClick={removeIdFile}
-              className="text-red-400 hover:text-red-600 transition text-sm font-medium flex-shrink-0"
-            >
-              Remove
-            </button>
+            <div className="flex flex-shrink-0 flex-col gap-2">
+              {idBase64 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    openIdProof({
+                      dataUrl: idBase64,
+                      type: idFile.type,
+                      name: idFile.name,
+                    })
+                  }
+                  className="text-xs font-medium text-blue-600 transition hover:text-blue-700 dark:text-blue-400"
+                >
+                  View
+                </button>
+              )}
+              <button
+                onClick={removeIdFile}
+                className="text-xs font-medium text-red-400 transition hover:text-red-600"
+              >
+                Remove
+              </button>
+            </div>
           </div>
         )}
 
@@ -387,10 +397,10 @@ export default function AddTenantForm({
               key={service}
               type="button"
               onClick={() => toggleService(service)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+              className={`rounded-lg px-3 py-2 text-sm font-bold transition ${
                 form.services.includes(service)
                   ? "bg-blue-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                  : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
               }`}
             >
               {service}
@@ -398,7 +408,7 @@ export default function AddTenantForm({
           ))}
         </div>
 
-        <div className="flex gap-3 pt-2">
+        <div className="sticky bottom-0 -mx-4 mt-1 flex gap-3 border-t border-slate-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:static sm:mx-0 sm:border-t-0 sm:p-0 sm:pt-2">
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
           </Button>

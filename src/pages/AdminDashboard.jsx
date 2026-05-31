@@ -50,7 +50,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-950 transition-colors duration-300">
+    <div className="app-surface min-h-screen transition-colors duration-300">
       {/* Modals */}
       {showAddTenant && (
         <AddTenantForm
@@ -75,7 +75,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Content */}
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-5 sm:px-6 sm:py-8">
         {/* Success message */}
         <AnimatePresence>
           {successMsg && (
@@ -99,7 +99,11 @@ export default function AdminDashboard() {
         {activeTab === "tenants" && (
           <div className="flex flex-col gap-4">
             <div className="flex justify-start sm:justify-end">
-              <Button variant="primary" onClick={() => setShowAddTenant(true)}>
+              <Button
+                variant="primary"
+                onClick={() => setShowAddTenant(true)}
+                className="w-full sm:w-auto"
+              >
                 + Add Customer
               </Button>
             </div>
@@ -110,7 +114,11 @@ export default function AdminDashboard() {
         {activeTab === "payments" && (
           <div className="flex flex-col gap-4">
             <div className="flex justify-start sm:justify-end">
-              <Button variant="primary" onClick={() => setShowAddPayment(true)}>
+              <Button
+                variant="primary"
+                onClick={() => setShowAddPayment(true)}
+                className="w-full sm:w-auto"
+              >
                 + Add Payment
               </Button>
             </div>
@@ -128,7 +136,11 @@ export default function AdminDashboard() {
         {activeTab === "meter" && (
           <div className="flex flex-col gap-4">
             <div className="flex justify-end">
-              <Button variant="primary" onClick={() => setShowMeterForm(true)}>
+              <Button
+                variant="primary"
+                onClick={() => setShowMeterForm(true)}
+                className="w-full sm:w-auto"
+              >
                 + Add Reading
               </Button>
             </div>

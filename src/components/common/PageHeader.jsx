@@ -3,17 +3,17 @@ import { fadeUp, staggerContainer } from "./motionConfig";
 
 export default function PageHeader({ eyebrow, title, subtitle }) {
   return (
-    <header className="border-b border-white/10 bg-[linear-gradient(135deg,#1d4ed8_0%,#0891b2_52%,#0f766e_100%)] text-white dark:bg-[linear-gradient(135deg,#020617_0%,#0f172a_55%,#134e4a_100%)]">
+    <header className="border-b border-slate-200/80 bg-white/70 text-slate-950 backdrop-blur dark:border-gray-800/80 dark:bg-gray-950/70 dark:text-white">
       <MotionDiv
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="mx-auto flex min-h-64 w-full max-w-6xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6 lg:min-h-72"
+        className="mx-auto flex min-h-56 w-full max-w-6xl flex-col items-center justify-center px-4 py-14 text-center sm:px-6 lg:min-h-64"
       >
         {eyebrow && (
           <MotionP
             variants={fadeUp}
-            className="mb-4 inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-semibold text-white/90 shadow-sm backdrop-blur"
+            className="mb-4 inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-1.5 text-sm font-semibold text-slate-500 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-slate-400"
           >
             {eyebrow}
           </MotionP>
@@ -27,7 +27,7 @@ export default function PageHeader({ eyebrow, title, subtitle }) {
         {subtitle && (
           <MotionP
             variants={fadeUp}
-            className="mt-4 max-w-2xl text-base leading-7 text-white/78 sm:text-lg"
+            className="mt-4 max-w-2xl text-base leading-7 text-slate-500 dark:text-slate-400 sm:text-lg"
           >
             {subtitle}
           </MotionP>

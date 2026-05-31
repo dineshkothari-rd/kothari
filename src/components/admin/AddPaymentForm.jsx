@@ -27,6 +27,8 @@ function InputField({
   type = "text",
   placeholder,
   hint,
+  min,
+  max,
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -39,7 +41,9 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="px-4 py-2.5 rounded-xl border text-white border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm scheme-light-dark"
+        min={min}
+        max={max}
+        className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm scheme-light-dark"
       />
       {hint && <p className="text-xs text-gray-400">{hint}</p>}
     </div>
@@ -63,7 +67,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     [form.tenantId, tenants],
   );
   const activeType = getBusinessType(selectedTenant?.businessType);
-  const totalRent = selectedTenant?.rent || 0;
+  const totalRent = Number(selectedTenant?.rent) || 0;
   const amountPaid = Number(form.amountPaid) || 0;
   const previousPaid =
     previousBalance !== null ? totalRent - previousBalance : 0;
@@ -82,6 +86,10 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
   }
 
   const status = getStatus();
+  const paidPercent =
+    totalRent > 0
+      ? Math.min(100, Math.round((totalPaidTillNow / totalRent) * 100))
+      : 0;
 
   const statusStyles = {
     Paid: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
@@ -97,7 +105,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
 
       try {
         const tenant = tenants.find((t) => t.id === tenantId);
-        const totalRent = tenant?.rent || 0;
+        const totalRent = Number(tenant?.rent) || 0;
 
         const modernQuery = query(
           collection(db, "payments"),
@@ -182,7 +190,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     }
 
     const tenant = tenants.find((t) => t.id === form.tenantId);
-    const totalRent = tenant?.rent || 0;
+    const totalRent = Number(tenant?.rent) || 0;
     const amountPaid = Number(form.amountPaid) || 0;
 
     if (amountPaid <= 0) {
@@ -227,7 +235,9 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
       const newTotalPaid = totalPaid + amountPaid;
 
       if (newTotalPaid > totalRent) {
-        setError(`Total exceeds rent. Remaining: ₹${totalRent - totalPaid}`);
+        setError(
+          `Total exceeds rent. Remaining: ₹${Math.max(0, totalRent - totalPaid).toLocaleString("en-IN")}`,
+        );
         return;
       }
 
@@ -270,9 +280,9 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
     selectedTenant && (form.month || previousBalance !== null);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-8">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/50 px-0 pt-8 sm:items-center sm:px-4 sm:py-8">
       <div
-        className={`flex w-full flex-col gap-5 rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-800 sm:p-6 ${
+        className={`flex max-h-[92vh] w-full flex-col gap-4 overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl dark:bg-gray-800 sm:max-h-[calc(100vh-4rem)] sm:rounded-xl sm:p-6 ${
           showSummaryCard ? "max-w-4xl" : "max-w-lg"
         }`}
       >
@@ -282,7 +292,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-2xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
           >
             ✕
           </button>
@@ -341,6 +351,8 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
               type="number"
               value={form.amountPaid}
               onChange={handleChange}
+              min="1"
+              max={previousBalance ?? (totalRent || undefined)}
               placeholder={
                 totalRent
                   ? `Max ₹${totalRent.toLocaleString("en-IN")}`
@@ -374,7 +386,7 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
             />
           </div>
           {showSummaryCard && (
-            <div className="flex flex-col gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900 lg:mt-6">
+            <div className="flex flex-col gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900 lg:mt-6">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                 Payment Summary
               </p>
@@ -447,22 +459,18 @@ export default function AddPaymentForm({ tenants, onClose, onSuccess }) {
                         : "bg-gray-300"
                   }`}
                   style={{
-                    width: `${Math.min(100, Math.round((totalPaidTillNow / totalRent) * 100))}%`,
+                    width: `${paidPercent}%`,
                   }}
                 />
               </div>
               <p className="text-xs text-gray-400 text-right">
-                {Math.min(
-                  100,
-                  Math.round((totalPaidTillNow / totalRent) * 100),
-                ) || 0}
-                % paid
+                {paidPercent}% paid
               </p>
             </div>
           )}
         </div>
 
-        <div className="flex gap-3 pt-2">
+        <div className="sticky bottom-0 -mx-4 mt-1 flex gap-3 border-t border-slate-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:static sm:mx-0 sm:border-t-0 sm:p-0 sm:pt-2">
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
           </Button>

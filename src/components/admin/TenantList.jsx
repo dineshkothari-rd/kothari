@@ -3,13 +3,16 @@ import { doc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import EditTenantForm from "./EditTenantForm";
 import Button from "../common/Button";
+import InfiniteListFooter from "../common/InfiniteListFooter";
 import { useFirestoreCollection } from "../../hooks/useFirestoreCollection";
+import { useIncrementalList } from "../../hooks/useIncrementalList";
 import { businessTypeOptions, getBusinessType } from "../../utils/businessTypes";
+import { openIdProof } from "../../utils/idProof";
 
 function ConfirmDelete({ name, onConfirm, onCancel }) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm flex flex-col gap-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-0 sm:items-center sm:px-4">
+      <div className="flex w-full max-w-sm flex-col gap-4 rounded-t-xl bg-white p-4 shadow-xl dark:bg-gray-800 sm:rounded-xl sm:p-6">
         <h3 className="text-lg font-bold text-gray-800 dark:text-white">
           Delete Customer?
         </h3>
@@ -23,7 +26,7 @@ function ConfirmDelete({ name, onConfirm, onCancel }) {
           </Button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full font-semibold transition text-sm"
+            className="min-h-10 flex-1 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700"
           >
             Delete
           </button>
@@ -63,6 +66,13 @@ export default function TenantList({ roomRecords = [] }) {
       return matchesType && matchesSearch;
     });
   }, [filterType, search, tenants]);
+  const {
+    visibleItems,
+    sentinelRef,
+    visibleCount,
+    hasMore,
+    loadMore,
+  } = useIncrementalList(filtered, 12);
 
   if (loading) return <p className="text-gray-400">Loading tenants...</p>;
 
@@ -86,9 +96,14 @@ export default function TenantList({ roomRecords = [] }) {
       )}
 
       <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-          Customer Records
-        </h2>
+        <div>
+          <h2 className="text-xl font-extrabold text-slate-950 dark:text-white">
+            Customer Records
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Search, filter and manage active customers quickly.
+          </p>
+        </div>
         <div className="grid w-full grid-cols-1 gap-3 sm:w-auto sm:grid-cols-[11rem_18rem]">
           <select
             value={filterType}
@@ -117,11 +132,96 @@ export default function TenantList({ roomRecords = [] }) {
           {tenants.length === 0 ? "No customers added yet." : "No results found."}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <div className="overflow-x-auto">
+        <div className="space-y-4">
+          <div className="grid gap-3 md:hidden">
+            {visibleItems.map((t) => {
+              const type = getBusinessType(t.businessType);
+              return (
+                <article key={t.id} className="card-modern rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-extrabold text-slate-950 dark:text-white">
+                        {t.name}
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-slate-400">
+                        {type.label} • {type.unitLabel} {t.room || "-"}
+                      </p>
+                    </div>
+                    <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-slate-200">
+                      ₹{(Number(t.rent) || 0).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                    <div className="rounded-lg bg-slate-50 p-3 dark:bg-gray-950">
+                      <p className="text-[11px] font-bold uppercase text-slate-400">
+                        Phone
+                      </p>
+                      <p className="mt-1 truncate font-semibold text-slate-700 dark:text-slate-200">
+                        {t.phone || "-"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-slate-50 p-3 dark:bg-gray-950">
+                      <p className="text-[11px] font-bold uppercase text-slate-400">
+                        Start
+                      </p>
+                      <p className="mt-1 truncate font-semibold text-slate-700 dark:text-slate-200">
+                        {t.moveInDate || "-"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {Boolean(t.services?.length) && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {t.services.map((service) => (
+                        <span
+                          key={service}
+                          className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                        >
+                          {service}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {t.idProof && (
+                      <button
+                        onClick={() =>
+                          openIdProof({
+                            dataUrl: t.idProof,
+                            type: t.idProofType,
+                            name: t.idProofName || `${t.name} ID Proof`,
+                          })
+                        }
+                        className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 dark:border-gray-700 dark:text-slate-200"
+                      >
+                        View ID
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setEditTenant(t)}
+                      className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setDeleteTenant(t)}
+                      className="rounded-lg border border-red-100 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 dark:border-red-900/50"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="panel-modern hidden overflow-hidden rounded-xl md:block">
+            <div className="overflow-x-auto">
             <table className="w-full min-w-[1080px] text-sm">
               <thead>
-                <tr className="bg-blue-600 text-white">
+                <tr className="bg-slate-50 text-slate-500 dark:bg-gray-950 dark:text-slate-400">
                   <th className="text-left py-3 px-4">Name</th>
                   <th className="text-left py-3 px-4">Type</th>
                   <th className="text-left py-3 px-4">Phone</th>
@@ -135,15 +235,15 @@ export default function TenantList({ roomRecords = [] }) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((t, i) => {
+                {visibleItems.map((t, i) => {
                   const type = getBusinessType(t.businessType);
                   return (
                     <tr
                       key={t.id}
                       className={
                         i % 2 === 0
-                          ? "bg-gray-50 dark:bg-gray-900"
-                          : "bg-white dark:bg-gray-800"
+                          ? "bg-white dark:bg-gray-900"
+                          : "bg-slate-50/70 dark:bg-gray-800"
                       }
                     >
                     <td className="py-3 px-4 font-medium text-gray-800 dark:text-white">
@@ -184,18 +284,13 @@ export default function TenantList({ roomRecords = [] }) {
                     <td className="py-3 px-4">
                       {t.idProof ? (
                         <button
-                          onClick={() => {
-                            const w = window.open();
-                            if (t.idProofType === "application/pdf") {
-                              w.document.write(
-                                `<iframe src="${t.idProof}" width="100%" height="100%"></iframe>`,
-                              );
-                            } else {
-                              w.document.write(
-                                `<img src="${t.idProof}" style="max-width:100%;"/>`,
-                              );
-                            }
-                          }}
+                          onClick={() =>
+                            openIdProof({
+                              dataUrl: t.idProof,
+                              type: t.idProofType,
+                              name: t.idProofName || `${t.name} ID Proof`,
+                            })
+                          }
                           className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline text-xs font-medium"
                         >
                           🪪 View ID
@@ -226,7 +321,15 @@ export default function TenantList({ roomRecords = [] }) {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
+          <InfiniteListFooter
+            total={filtered.length}
+            visible={visibleCount}
+            hasMore={hasMore}
+            loadMore={loadMore}
+            sentinelRef={sentinelRef}
+          />
         </div>
       )}
     </div>

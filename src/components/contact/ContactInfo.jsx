@@ -16,7 +16,7 @@ function InfoCard({ icon, label, value }) {
   return (
     <MotionDiv
       variants={fadeUp}
-      className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-200 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-blue-800"
+      className="flex items-start gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-200 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-blue-800"
     >
       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-lg">
         {icon}
@@ -39,11 +39,11 @@ export default function ContactInfo() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8"
+      className="card-modern flex flex-col gap-5 rounded-xl p-5 sm:p-8"
     >
       <div>
         <h2 className="text-2xl font-extrabold text-gray-800 dark:text-white mb-1">
-          Get In Touch 👋
+          Get In Touch
         </h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm">
           Have questions? We'd love to hear from you!
@@ -56,7 +56,7 @@ export default function ContactInfo() {
 
       <MotionDiv
         variants={fadeUp}
-        className="h-56 overflow-hidden rounded-2xl border border-slate-200 dark:border-gray-800"
+        className="h-56 overflow-hidden rounded-xl border border-slate-200 dark:border-gray-800"
       >
         <iframe
           title="Kothari PG Location"
