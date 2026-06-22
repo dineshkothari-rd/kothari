@@ -169,3 +169,31 @@ export const calculateSummary = (filtered, tenants = []) => {
     normalized,
   };
 };
+
+export function formatTime12Hour(time) {
+  if (!time) return "";
+
+  const [hours, minutes] = time.split(":");
+
+  return new Date(
+    2000,
+    0,
+    1,
+    Number(hours),
+    Number(minutes),
+  ).toLocaleTimeString("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+export const formatTime = (timestamp) => {
+  if (!timestamp?.seconds) return "-";
+
+  return new Date(timestamp.seconds * 1000).toLocaleTimeString("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};

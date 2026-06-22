@@ -27,6 +27,8 @@ const initialForm = {
   idProof: "",
   idProofName: "",
   idProofSize: 0,
+  moveInTime: "12:00",
+  moveOutTime: "11:00",
 };
 
 function InputField({
@@ -139,6 +141,8 @@ export default function AddTenantForm({
         idProofSize: form.idProofSize || 0,
         status: "active",
         createdAt: serverTimestamp(),
+        moveInTime: form.moveInTime,
+        moveOutTime: form.moveOutTime,
       });
       onSuccess?.();
       onClose?.();
@@ -299,19 +303,47 @@ export default function AddTenantForm({
             placeholder="8000"
           />
           <InputField
-            label={activeType.dateInLabel}
+            label={
+              form.businessType === "hotel"
+                ? "Check-In Date"
+                : activeType.dateInLabel
+            }
             name="moveInDate"
             type="date"
             value={form.moveInDate}
             onChange={handleChange}
           />
+
+          {form.businessType === "hotel" && (
+            <InputField
+              label="Check-In Time"
+              name="moveInTime"
+              type="time"
+              value={form.moveInTime}
+              onChange={handleChange}
+            />
+          )}
           <InputField
-            label={activeType.dateOutLabel}
+            label={
+              form.businessType === "hotel"
+                ? "Check-Out Date"
+                : activeType.dateOutLabel
+            }
             name="moveOutDate"
             type="date"
             value={form.moveOutDate}
             onChange={handleChange}
           />
+
+          {form.businessType === "hotel" && (
+            <InputField
+              label="Check-Out Time"
+              name="moveOutTime"
+              type="time"
+              value={form.moveOutTime}
+              onChange={handleChange}
+            />
+          )}
         </div>
 
         {/* ID Proof */}

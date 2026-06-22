@@ -2,7 +2,10 @@ import { useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import Button from "../common/Button";
-import { businessTypeOptions, getBusinessType } from "../../utils/businessTypes";
+import {
+  businessTypeOptions,
+  getBusinessType,
+} from "../../utils/businessTypes";
 import {
   idProofHelpText,
   openIdProof,
@@ -53,6 +56,8 @@ export default function EditTenantForm({
     moveInDate: tenant.moveInDate || "",
     moveOutDate: tenant.moveOutDate || "",
     services: tenant.services || [],
+    moveInTime: tenant.moveInTime || "",
+    moveOutTime: tenant.moveOutTime || "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -132,7 +137,9 @@ export default function EditTenantForm({
 
   async function handleUpdate() {
     if (!form.name || !form.phone || !form.room || !form.rent) {
-      setError(`Name, phone, ${activeType.unitLabel.toLowerCase()} and amount are required`);
+      setError(
+        `Name, phone, ${activeType.unitLabel.toLowerCase()} and amount are required`,
+      );
       return;
     }
     setLoading(true);
@@ -151,6 +158,8 @@ export default function EditTenantForm({
         idProof: idBase64 || null,
         idProofName: existingIdName || null,
         idProofType: idProofType || null,
+        moveInTime: form.moveInTime,
+        moveOutTime: form.moveOutTime,
       });
       onSuccess?.();
       onClose?.();
@@ -286,7 +295,9 @@ export default function EditTenantForm({
                     </option>
                   ))}
                   {form.room &&
-                    !roomOptions.some((option) => option.value === form.room) && (
+                    !roomOptions.some(
+                      (option) => option.value === form.room,
+                    ) && (
                       <option value={form.room}>{form.room} (current)</option>
                     )}
                 </select>
@@ -310,19 +321,48 @@ export default function EditTenantForm({
             placeholder="8000"
           />
           <InputField
-            label={activeType.dateInLabel}
+            label={
+              form.businessType === "hotel"
+                ? "Check-In Date"
+                : activeType.dateInLabel
+            }
             name="moveInDate"
             type="date"
             value={form.moveInDate}
             onChange={handleChange}
           />
+
+          {form.businessType === "hotel" && (
+            <InputField
+              label="Check-In Time"
+              name="moveInTime"
+              type="time"
+              value={form.moveInTime}
+              onChange={handleChange}
+            />
+          )}
+
           <InputField
-            label={activeType.dateOutLabel}
+            label={
+              form.businessType === "hotel"
+                ? "Check-Out Date"
+                : activeType.dateOutLabel
+            }
             name="moveOutDate"
             type="date"
             value={form.moveOutDate}
             onChange={handleChange}
           />
+
+          {form.businessType === "hotel" && (
+            <InputField
+              label="Check-Out Time"
+              name="moveOutTime"
+              type="time"
+              value={form.moveOutTime}
+              onChange={handleChange}
+            />
+          )}
         </div>
 
         {/* ID Proof */}

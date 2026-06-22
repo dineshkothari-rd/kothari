@@ -1,5 +1,8 @@
-export const roomNumbers = Array.from({ length: 15 }, (_, index) =>
-  String(index + 1).padStart(2, "0"),
+export const ROOM_START = 101;
+export const ROOM_COUNT = 15;
+
+export const roomNumbers = Array.from({ length: ROOM_COUNT }, (_, index) =>
+  String(ROOM_START + index),
 );
 
 export const bedLabels = ["Bed A", "Bed B"];
@@ -33,10 +36,13 @@ export function getRoomInventory() {
 
 export function parseRoomLabel(value = "") {
   const text = String(value || "");
+
   const roomMatch = text.match(/Room\s+(\d+)/i);
   const legacyRoomMatch = text.match(/^(\d{1,3})\b/);
+
   const rawRoom = roomMatch?.[1] || legacyRoomMatch?.[1] || "";
-  const room = rawRoom ? rawRoom.slice(-2).padStart(2, "0") : "";
+  const room = rawRoom ? rawRoom.padStart(3, "0") : "";
+
   const bed = text.includes("Bed A")
     ? "Bed A"
     : text.includes("Bed B")
@@ -50,14 +56,25 @@ export function parseRoomLabel(value = "") {
 
 export function isRoomCustomer(customer) {
   const businessType = customer.businessType || "pg";
+
   if (!["pg", "hotel"].includes(businessType)) return false;
+
   const status = String(customer.status || "active").toLowerCase();
+
   const activeStatuses = ["active", "booked", "checked in", "occupied"];
+
   if (!activeStatuses.includes(status)) return false;
 
   if (customer.moveOutDate) {
-    const moveOut = new Date(customer.moveOutDate);
-    if (!Number.isNaN(moveOut.getTime()) && moveOut < new Date()) return false;
+    const checkoutDateTime = `${customer.moveOutDate}T${
+      customer.moveOutTime || "11:00"
+    }`;
+
+    const checkout = new Date(checkoutDateTime);
+
+    if (!Number.isNaN(checkout.getTime()) && checkout.getTime() < Date.now()) {
+      return false;
+    }
   }
 
   return Boolean(parseRoomLabel(customer.room).room);
@@ -69,7 +86,9 @@ export function getAvailableRoomOptions(
   currentCustomerId = "",
 ) {
   const activeCustomers = customers.filter(
-    (customer) => isRoomCustomer(customer) && customer.id !== currentCustomerId,
+    (customer) =>
+      isRoomCustomer(customer) &&
+      String(customer.id) !== String(currentCustomerId),
   );
 
   return getRoomOptions(roomType).filter((option) => {
@@ -78,6 +97,7 @@ export function getAvailableRoomOptions(
       .filter((parsed) => parsed.room === option.room);
 
     const hasFullRoom = occupants.some((parsed) => parsed.bed === "Full Room");
+
     const occupiedBeds = occupants
       .filter((parsed) => parsed.bed === "Bed A" || parsed.bed === "Bed B")
       .map((parsed) => parsed.bed);

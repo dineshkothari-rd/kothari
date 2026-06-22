@@ -1,6 +1,7 @@
 import { getBusinessType } from "../../utils/businessTypes";
 import { formatINR } from "../../utils/adminActions";
 import { downloadReceipt, shareReceipt } from "../../utils/receipts";
+import { formatTime } from "../../utils/helper";
 
 const PaymentsTable = ({
   payments,
@@ -15,6 +16,8 @@ const PaymentsTable = ({
       </div>
     );
   }
+
+  console.log("laksdjaslkdsjas", { payments });
 
   return (
     <div className="space-y-3">
@@ -80,6 +83,7 @@ const PaymentsTable = ({
               <div className="mt-4 flex items-center justify-between gap-3 text-xs font-semibold text-slate-500">
                 <span>{p.month || "-"}</span>
                 <span>{p.paidOn || "-"}</span>
+                <span>{formatTime(p.createdAt)}</span>
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
@@ -121,134 +125,135 @@ const PaymentsTable = ({
 
       <div className="panel-modern hidden overflow-hidden rounded-xl md:block">
         <div className="overflow-x-auto">
-        <table className="w-full min-w-[920px] text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 dark:border-gray-800 dark:bg-gray-950">
-              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Customer
-            </th>
-            <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Type
-            </th>
-            <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Unit
-            </th>
-            <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Month
-            </th>
-            <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Paid On
-            </th>
-            <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Charge
-            </th>
-            <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Paid
-            </th>
-            <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Balance
-            </th>
-            <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-              Receipt
-            </th>
-            {(canDeletePayment || onPayBalance) && (
-              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
-                Action
-              </th>
-            )}
-          </tr>
-          </thead>
-          <tbody>
-          {payments.map((p) => {
-            const type = getBusinessType(p.businessType);
-            const totalRent = Number(p.totalRent) || 0;
-            const amountPaid = Number(p.amountPaid ?? p.amount ?? 0) || 0;
-            const balance = Math.max(
-              0,
-              Number(p.balance ?? totalRent - amountPaid) || 0,
-            );
-            return (
-              <tr
-                key={p.id}
-                className="border-b border-gray-50 transition hover:bg-slate-50 dark:border-gray-800/70 dark:hover:bg-gray-800/50"
-              >
-              <td className="py-2.5 px-3 font-medium text-gray-800 dark:text-white">
-                {p.tenantName}
-              </td>
-              <td className="py-2.5 px-3">
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-slate-200">
-                  {type.label}
-                </span>
-              </td>
-              <td className="py-2.5 px-3 font-medium text-gray-800 dark:text-white">
-                {type.unitLabel} {p.tenantRoom || "-"}
-              </td>
-              <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
-                {p.month}
-              </td>
-              <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
-                {p.paidOn}
-              </td>
-              <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
-                <p className="font-bold text-gray-800 dark:text-white">
-                  {formatINR(totalRent)}
-                </p>
-              </td>
-              <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
-                <p className="font-bold text-green-600 dark:text-green-400">
-                  {formatINR(amountPaid)}
-                </p>
-              </td>
-              <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
-                <p className="font-bold text-red-500">
-                  {formatINR(balance)}
-                </p>
-              </td>
-              <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => downloadReceipt(p)}
-                    className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-bold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-gray-700 dark:text-slate-200"
+          <table className="w-full min-w-[920px] text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50 dark:border-gray-800 dark:bg-gray-950">
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+                  Customer
+                </th>
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+                  Type
+                </th>
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+                  Unit
+                </th>
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+                  Month
+                </th>
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+                  Paid On
+                </th>
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+                  Charge
+                </th>
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+                  Paid
+                </th>
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+                  Balance
+                </th>
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+                  Receipt
+                </th>
+                {(canDeletePayment || onPayBalance) && (
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase">
+                    Action
+                  </th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {payments.map((p) => {
+                const type = getBusinessType(p.businessType);
+                const totalRent = Number(p.totalRent) || 0;
+                const amountPaid = Number(p.amountPaid ?? p.amount ?? 0) || 0;
+                const balance = Math.max(
+                  0,
+                  Number(p.balance ?? totalRent - amountPaid) || 0,
+                );
+                return (
+                  <tr
+                    key={p.id}
+                    className="border-b border-gray-50 transition hover:bg-slate-50 dark:border-gray-800/70 dark:hover:bg-gray-800/50"
                   >
-                    Download
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => shareReceipt(p)}
-                    className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-bold text-slate-700 transition hover:border-green-400 hover:text-green-600 dark:border-gray-700 dark:text-slate-200"
-                  >
-                    Share
-                  </button>
-                </div>
-              </td>
-              {(canDeletePayment || onPayBalance) && (
-                <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
-                  <div className="flex flex-wrap gap-2">
-                    {onPayBalance && balance > 0 && (
-                      <button
-                        onClick={() => onPayBalance(p)}
-                        className="text-blue-600 hover:underline text-xs font-medium transition dark:text-blue-400"
-                      >
-                        Pay Balance
-                      </button>
+                    <td className="py-2.5 px-3 font-medium text-gray-800 dark:text-white">
+                      {p.tenantName}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-slate-200">
+                        {type.label}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 font-medium text-gray-800 dark:text-white">
+                      {type.unitLabel} {p.tenantRoom || "-"}
+                    </td>
+                    <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
+                      {p.month}
+                    </td>
+                    <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
+                      {p.paidOn} at &nbsp;
+                      {formatTime(p.createdAt)}
+                    </td>
+                    <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
+                      <p className="font-bold text-gray-800 dark:text-white">
+                        {formatINR(totalRent)}
+                      </p>
+                    </td>
+                    <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
+                      <p className="font-bold text-green-600 dark:text-green-400">
+                        {formatINR(amountPaid)}
+                      </p>
+                    </td>
+                    <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
+                      <p className="font-bold text-red-500">
+                        {formatINR(balance)}
+                      </p>
+                    </td>
+                    <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => downloadReceipt(p)}
+                          className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-bold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-gray-700 dark:text-slate-200"
+                        >
+                          Download
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => shareReceipt(p)}
+                          className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-bold text-slate-700 transition hover:border-green-400 hover:text-green-600 dark:border-gray-700 dark:text-slate-200"
+                        >
+                          Share
+                        </button>
+                      </div>
+                    </td>
+                    {(canDeletePayment || onPayBalance) && (
+                      <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400">
+                        <div className="flex flex-wrap gap-2">
+                          {onPayBalance && balance > 0 && (
+                            <button
+                              onClick={() => onPayBalance(p)}
+                              className="text-blue-600 hover:underline text-xs font-medium transition dark:text-blue-400"
+                            >
+                              Pay Balance
+                            </button>
+                          )}
+                          {canDeletePayment && (
+                            <button
+                              onClick={() => setDeletePayment(p)}
+                              className="text-red-500 hover:underline text-xs font-medium transition"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     )}
-                    {canDeletePayment && (
-                      <button
-                        onClick={() => setDeletePayment(p)}
-                        className="text-red-500 hover:underline text-xs font-medium transition"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </td>
-              )}
-            </tr>
-            );
-          })}
-          </tbody>
-        </table>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
